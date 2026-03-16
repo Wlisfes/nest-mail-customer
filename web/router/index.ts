@@ -16,6 +16,16 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         component: () => import('@/views/home/index.vue')
                     },
                     {
+                        path: '/main/login',
+                        meta: { AUTH: 'AUTH_NONE' },
+                        component: () => import('@/views/main/login/login.vue')
+                    },
+                    {
+                        path: '/main/register',
+                        meta: { AUTH: 'AUTH_NONE' },
+                        component: () => import('@/views/main/register/register.vue')
+                    },
+                    {
                         path: '/:pathMatch(.*)*',
                         meta: { AUTH: 'NONE' },
                         component: () => import('@/views/error/404.vue')

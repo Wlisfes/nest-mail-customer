@@ -5,10 +5,10 @@ import { useGlobal, useStore } from '@/store'
 export default defineComponent({
     name: 'BaseHome',
     async httpServer({ pinia, logger }) {
-        // logger.info('[Home.vue]', {
-        //     title: '大苏打33的撒大1111111dsadasdsaDDSADAASDSADASDASDASDAdas',
-        //     date: Date.now()
-        // })
+        logger.info('[Home.vue]', {
+            title: '大苏打33的撒大1111111dsadasdsaDDSADAASDSADASDASDASDAdas',
+            date: Date.now()
+        })
     },
     // async httpMetaServer({ store, route }) {
     //     return {

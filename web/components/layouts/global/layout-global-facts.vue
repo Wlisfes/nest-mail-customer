@@ -4,7 +4,7 @@ import { useMouse, useStore } from '@/store'
 import { useState } from '@/hooks'
 
 export default defineComponent({
-    name: 'LayoutHomeFacts',
+    name: 'LayoutGlobalFacts',
     setup(props) {
         const { inverted } = useStore(useMouse)
         const { state } = useState({
@@ -20,7 +20,7 @@ export default defineComponent({
         })
 
         return () => (
-            <n-element class="layout-home-facts common-width-inline">
+            <n-element class="layout-global-facts common-width-inline">
                 <div class="facts-box flex flex-col items-center">
                     <n-text class="chat-hot z-2 p-be-5">{state.hot}</n-text>
                     <h1 class="m-0 text-size-[var(--facts-box-title-size)] text-center max-w-870 z-2 p-be-24">{state.title}</h1>

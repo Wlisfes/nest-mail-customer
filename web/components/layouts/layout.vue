@@ -4,10 +4,6 @@ import { useGlobal, useMouse, useStore } from '@/store'
 
 export default defineComponent({
     name: 'Layout',
-    props: {
-        /**容器配置模式**/
-        name: { type: String, required: true }
-    },
     setup(props) {
         return () => (
             <n-layout class="h-full overflow-hidden" content-class="flex flex-col overflow-hidden">
@@ -15,19 +11,43 @@ export default defineComponent({
                     <n-element class="common-width-inline h-60 flex gap-20 overflow-hidden">
                         <router-link to="/" class="flex overflow-hidden">
                             <n-button text focusable={false}>
-                                <common-global-wrapper
-                                    name="nest-logo"
-                                    color="var(--n-text-color-hover)"
-                                    size={40}
-                                ></common-global-wrapper>
+                                <common-global-wrapper name="nest-logo" color="var(--n-text-color-hover)" size={40}></common-global-wrapper>
                                 <h2 class="m-0 p-bs-8 p-inline-5">ChatBook</h2>
                             </n-button>
                         </router-link>
-                        <n-element class="h-full flex-1"></n-element>
+                        <n-element class="h-full flex flex-1 items-center justify-end gap-48 p-inline-40">
+                            {/* <n-button text focusable={false}>
+                                <div class="text-16">产品</div>
+                            </n-button>
+                            <n-button text focusable={false}>
+                                <div class="text-16">解决方案</div>
+                            </n-button>
+                            <n-button text focusable={false}>
+                                <div class="text-16">覆盖范围&定价</div>
+                            </n-button>
+                            <n-button text focusable={false}>
+                                <div class="text-16">支持中心</div>
+                            </n-button>
+                            <n-button text focusable={false}>
+                                <div class="text-16">关于我们</div>
+                            </n-button> */}
+                        </n-element>
                         <n-element class="h-full flex items-center overflow-hidden">
-                            <layout-common-consumer></layout-common-consumer>
-                            <n-divider vertical class="h-20! m-inline-20!" />
                             <layout-common-deploy></layout-common-deploy>
+                            <n-divider vertical class="h-20! m-inline-20!" />
+                            <n-element class="flex items-center gap-20 overflow-hidden">
+                                <router-link to="/main/login">
+                                    <n-button text focusable={false}>
+                                        登录
+                                    </n-button>
+                                </router-link>
+                                {/* <layout-common-consumer></layout-common-consumer> */}
+                                <router-link to="/main/register">
+                                    <n-button focusable={false} round type="primary">
+                                        免费体验
+                                    </n-button>
+                                </router-link>
+                            </n-element>
                         </n-element>
                     </n-element>
                 </n-layout-header>

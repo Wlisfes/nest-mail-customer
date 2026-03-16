@@ -16,6 +16,18 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         component: () => import('@/views/home/index.vue')
                     },
                     {
+                        path: '/:pathMatch(.*)*',
+                        meta: { AUTH: 'NONE' },
+                        component: () => import('@/views/error/404.vue')
+                    }
+                ]
+            },
+            {
+                path: '/main',
+                component: () => import('@/views/main/layout/layout.vue'),
+                redirect: '/main/login',
+                children: [
+                    {
                         path: '/main/login',
                         meta: { AUTH: 'AUTH_NONE' },
                         component: () => import('@/views/main/login/login.vue')
@@ -24,11 +36,6 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         path: '/main/register',
                         meta: { AUTH: 'AUTH_NONE' },
                         component: () => import('@/views/main/register/register.vue')
-                    },
-                    {
-                        path: '/:pathMatch(.*)*',
-                        meta: { AUTH: 'NONE' },
-                        component: () => import('@/views/error/404.vue')
                     }
                 ]
             }

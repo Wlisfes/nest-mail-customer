@@ -16,9 +16,14 @@ export default defineComponent({
     //     }
     // },
     setup(props) {
-        return () => <n-element class="flex flex-col flex-1 overflow-hidden">Home</n-element>
+        return () => (
+            <n-element class="flex flex-col flex-1 overflow-hidden">
+                <layout-home-choose></layout-home-choose>
+                <layout-home-issues></layout-home-issues>
+                <layout-home-facts></layout-home-facts>
+            </n-element>
+        )
     }
 })
 </script>
 
-<style lang="scss" scoped></style>

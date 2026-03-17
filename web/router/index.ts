@@ -1,8 +1,9 @@
 import { createRouter as _createRouter, createMemoryHistory, createWebHistory } from 'vue-router'
+import { useCoutext, AUTH } from '@/hooks'
 import Layout from '@/components/layouts/layout.vue'
 
 export function createRouter(options: Omix<{ ssr: boolean }>) {
-    return _createRouter({
+    const router = _createRouter({
         history: options.ssr ? createMemoryHistory() : createWebHistory(),
         routes: [
             {
@@ -46,4 +47,22 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
             }
         ]
     })
+
+    /**路由守卫**/
+    router.beforeEach((to, from, next) => {
+        const { cookies } = useCoutext()
+        const token = cookies.get(AUTH.APP_NEST_TOKEN)
+        const authMode = to.meta?.AUTH as string
+        if (authMode === 'AUTH' && !token) {
+            /**需要登录但未登录，跳转登录页**/
+            return next({ path: '/main/login', replace: true })
+        }
+        if (authMode === 'AUTH_NONE' && token) {
+            /**已登录不可进入登录/注册页，跳转管理页**/
+            return next({ path: '/manager', replace: true })
+        }
+        /**NONE 或其他情况，直接放行**/
+        return next()
+    })
+    return router
 }

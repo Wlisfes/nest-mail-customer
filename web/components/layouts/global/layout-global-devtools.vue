@@ -8,7 +8,7 @@ export default defineComponent({
         const { state } = useState({
             hot: 'PROJECT FAQ',
             title: '围绕多邮箱管理的核心能力',
-            document: `从注册登录、邮箱授权到邮件收发、搜索与同步，MailServer 的页面文案围绕需求文档中的 MVP、二期与三期能力规划展开。`,
+            document: `从注册登录、邮箱授权到邮件收发、搜索与同步，Mail Server 的页面文案围绕需求文档中的 MVP、二期与三期能力规划展开。`,
             columns: [
                 {
                     type: 'primary',

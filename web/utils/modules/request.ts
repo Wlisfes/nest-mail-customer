@@ -1,5 +1,6 @@
 //@ts-nocheck
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import Cookies from 'universal-cookie'
 
 export const request: AxiosRequest = axios.create({
     baseURL: import.meta.env.NODE_CLIENT_SSR_BASEURL,
@@ -8,10 +9,11 @@ export const request: AxiosRequest = axios.create({
 
 request.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // const token = getToken()
-        // if (token) {
-        //     config.headers.Authorization = token
-        // }
+        const cookies = new Cookies(typeof document !== 'undefined' ? document.cookie : undefined)
+        const token = cookies.get('APP_NEST_TOKEN')
+        if (token) {
+            config.headers.Authorization = token
+        }
         return config
     },
     error => Promise.reject(error)

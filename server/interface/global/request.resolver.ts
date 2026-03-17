@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 import { IsNotEmpty, IsOptional, IsNumber, Min, IsArray, IsString } from 'class-validator'
 import { Type } from 'class-transformer'
 import { IsDateCustomize } from '@server/decorator'
@@ -16,17 +16,17 @@ export class OmixColumnOptions {
     @Type(type => Number)
     size: number = 20
 
-    @ApiPropertyOptional({ description: '开始时间' })
+    @ApiProperty({ description: '开始时间', required: false })
     @IsOptional()
     @IsDateCustomize()
     startTime: string
 
-    @ApiPropertyOptional({ description: '结束时间' })
+    @ApiProperty({ description: '结束时间', required: false })
     @IsOptional()
     @IsDateCustomize()
     endTime: string
 
-    @ApiPropertyOptional({ description: '模糊关键字' })
+    @ApiProperty({ description: '模糊关键字', required: false })
     @IsOptional()
     vague: string
 }
@@ -42,7 +42,8 @@ export class OmixPayloadOptions extends OmixColumnOptions {
     @IsString({ each: true, message: 'keys 必须为Array<string>格式' })
     keys: Array<string>
 
-    @ApiProperty({ description: '验证码', example: '495673' })
+    @ApiProperty({ description: '验证码', example: '495673', required: false })
+    @IsOptional()
     @IsNotEmpty({ message: '验证码 必填' })
     code: string
 }

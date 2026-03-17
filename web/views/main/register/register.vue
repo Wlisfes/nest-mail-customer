@@ -1,11 +1,12 @@
 <script lang="tsx">
 import { defineComponent } from 'vue'
 import { useFormService } from '@/hooks'
+import { httpBaseUserRegister } from '@/services/user.service'
 
 export default defineComponent({
     name: 'MainRegister',
     setup(props) {
-        const { formRef, formState, state, fetchValidater } = useFormService({
+        const { formRef, formState, state, setState, fetchValidater, router } = useFormService({
             formState: {
                 nickname: '',
                 email: '',
@@ -15,32 +16,25 @@ export default defineComponent({
             rules: {
                 nickname: { required: true, trigger: 'blur', message: '请输入用户名' },
                 email: { required: true, trigger: 'blur', message: '请输入注册邮箱' },
-                password: { required: true, trigger: 'blur', min: 8, max: 18, message: '请输入8~18位密码' },
-                code: { required: true, trigger: 'blur', message: '请输入邮箱验证码' }
+                password: { required: true, trigger: 'blur', min: 8, max: 18, message: '请输入8~18位密码' }
             }
         })
 
         async function fetchSubmit() {
             return await fetchValidater().then(async result => {
                 if (result) {
-                    // return await codexRef.value.fetchRefresh(300).then(() => {
-                    //     return setState({ loading: false, disabled: false })
-                    // })
+                    return await setState({ loading: false, disabled: false } as never)
                 }
                 try {
-                    // return await Service.httpBaseSystemUserTokenAuthorize({
-                    //     code: form.value.code,
-                    //     number: form.value.number,
-                    //     password: window.btoa(encodeURIComponent(form.value.password))
-                    // }).then(async ({ data }) => {
-                    //     return await setCompose(data).then(async () => {
-                    //         return router.push({ path: '/', replace: true })
-                    //     })
-                    // })
+                    return await httpBaseUserRegister({
+                        nickname: formState.value.nickname,
+                        email: formState.value.email,
+                        password: window.btoa(encodeURIComponent(formState.value.password))
+                    }).then(async () => {
+                        return router.push({ path: '/main/login', replace: true })
+                    })
                 } catch (err) {
-                    // return await codexRef.value.fetchRefresh(300).then(() => {
-                    //     return setState({ loading: false, disabled: false })
-                    // })
+                    return await setState({ loading: false, disabled: false } as never)
                 }
             })
         }
@@ -82,19 +76,6 @@ export default defineComponent({
                             prefix={{ name: 'nest-unset-ockes', size: 22 }}
                             onSubmit={fetchSubmit}
                         ></form-common-input>
-                    </n-form-item>
-                    <n-form-item path="code">
-                        <div class="flex flex-1 items-center overflow-hidden">
-                            <form-common-input
-                                class="flex-1"
-                                type="text"
-                                placeholder="请输入邮箱验证码"
-                                maxlength={4}
-                                v-model:value={formState.value.code}
-                                prefix={{ name: 'nest-unset-codex', size: 22 }}
-                                onSubmit={fetchSubmit}
-                            ></form-common-input>
-                        </div>
                     </n-form-item>
                     <n-form-item>
                         <common-global-button

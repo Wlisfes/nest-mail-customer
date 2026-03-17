@@ -11,7 +11,7 @@ export default defineComponent({
                         <router-link to="/" class="flex overflow-hidden">
                             <n-button text focusable={false}>
                                 <common-global-wrapper name="nest-logo" color="var(--n-text-color-hover)" size={40}></common-global-wrapper>
-                                <h2 class="m-0 p-bs-8 p-inline-5">MailServer</h2>
+                                <h2 class="m-0 p-bs-8 p-inline-5">Mail Server</h2>
                             </n-button>
                         </router-link>
                         <n-element class="h-full flex flex-1 items-center justify-end gap-48 p-inline-40">

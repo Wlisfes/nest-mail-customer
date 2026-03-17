@@ -7,7 +7,7 @@ export default defineComponent({
     setup(props) {
         const { state } = useState({
             chatBook: {
-                title: 'MailServer',
+                title: 'Mail Server',
                 document: `统一管理多个邮箱账号的 Web 邮件平台，支持聚合收件箱、账号授权、实时同步、统一搜索和多账号发信，帮助个人与团队减少频繁切换邮箱的成本。`
             },
             about: {
@@ -38,7 +38,7 @@ export default defineComponent({
             <n-element class="layout-common-footer flex flex-col overflow-hidden">
                 <div class="chat-connect common-width-inline flex justify-between gap-16 p-block-24">
                     <div class="flex flex-col gap-5 overflow-hidden">
-                        <h1 class="m-0 text-22">获取 MailServer 产品更新</h1>
+                        <h1 class="m-0 text-22">获取 Mail Server 产品更新</h1>
                         <n-text depth={3}>订阅版本动态、功能开放计划和多邮箱接入指南</n-text>
                     </div>
                     <div class="chat-connect-input flex gap-16 items-center">
@@ -106,7 +106,7 @@ export default defineComponent({
                 <n-divider class="m-0!"></n-divider>
                 <n-element class="common-width-inline flex flex-wrap gap-16 text-12 items-center justify-between p-block-16 gap-y-5">
                     <n-ellipsis tooltip={false}>
-                        <n-text>{`Copyright © 2021-${new Date().getFullYear()} MailServer. All rights reserved.`}</n-text>
+                        <n-text>{`Copyright © 2021-${new Date().getFullYear()} Mail Server. All rights reserved.`}</n-text>
                     </n-ellipsis>
                     <n-a class="whitespace-nowrap decoration-none text-center" target="_blank" href="https://beian.miit.gov.cn">
                         <n-button text focusable={false} class="text-12">

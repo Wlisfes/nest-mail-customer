@@ -48,7 +48,7 @@ export default defineComponent({
                                         name="nest-issues-chat"
                                     ></common-global-wrapper>
                                     <n-text class="text-18" strong>
-                                        MailServer
+                                        Mail Server
                                     </n-text>
                                 </div>
                                 <n-h1 class="m-0 text-center text-size-[var(--chat-super-title-size)]">

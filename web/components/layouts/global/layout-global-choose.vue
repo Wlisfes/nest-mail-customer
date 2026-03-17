@@ -6,9 +6,9 @@ export default defineComponent({
     name: 'LayoutGlobalChoose',
     setup(props) {
         const { state } = useState({
-            hot: 'WHY MailServer',
+            hot: 'WHY Mail Server',
             title: '一个入口管理所有邮箱账号',
-            document: `MailServer 是面向多邮箱场景的 Web 邮件聚合平台，支持把工作邮箱、个人邮箱和备用邮箱统一接入，在浏览器中完成收件、搜索、发送、同步与提醒。`,
+            document: `Mail Server 是面向多邮箱场景的 Web 邮件聚合平台，支持把工作邮箱、个人邮箱和备用邮箱统一接入，在浏览器中完成收件、搜索、发送、同步与提醒。`,
             columns: [
                 {
                     type: 'primary',

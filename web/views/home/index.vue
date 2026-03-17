@@ -5,7 +5,7 @@ export default defineComponent({
     name: 'BaseHome',
     async httpServer({ logger }) {
         logger.info('[Home.vue]', {
-            title: 'MailServer Home',
+            title: 'Mail Server Home',
             date: Date.now()
         })
     },

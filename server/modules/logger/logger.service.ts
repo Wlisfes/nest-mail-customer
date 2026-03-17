@@ -1,7 +1,8 @@
-import { Injectable, Inject, HttpException, HttpStatus } from '@nestjs/common'
+import { Injectable, Inject } from '@nestjs/common'
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston'
 import { Logger as WinstonLogger } from 'winston'
-import { OmixRequest } from '@server/interface/instance.resolver'
+import { isNotEmpty } from 'class-validator'
+import { OmixRequest } from '@server/interface'
 
 /**注入日志配置**/
 export function AutoDescriptor(target: any, propertyName: string, descriptor: Omix<PropertyDescriptor>) {
@@ -9,7 +10,13 @@ export function AutoDescriptor(target: any, propertyName: string, descriptor: Om
     const methodName = propertyName
     const originalMethod = descriptor.value
     descriptor.value = function (...args: any[]) {
-        this.deplayName = [className, methodName].join(':')
+        const request = args[0] ?? {}
+        const { stack } = args.find(item => isNotEmpty(item.stack)) ?? {}
+        this.stack = [stack, className, methodName].filter(isNotEmpty).join(':')
+        this.logger = new WinstonService(this.winston, request, {
+            datetime: request.headers?.datetime,
+            stack: this.stack
+        })
         return originalMethod.apply(this, args)
     }
 }
@@ -24,50 +31,42 @@ export class WinstonService {
         this.logger = logger
         this.request = request
         this.options = options
+        if (options.datetime) {
+            this.date = new Date(Number(options.datetime))
+        }
     }
     /**日志组合输出**/
-    private output(log: Omix) {
-        return { duration: `${Date.now() - this.date.getTime()}ms`, context: this.request.headers.context, log: log }
+    private output(log: any) {
+        return { duration: `${Date.now() - this.date.getTime()}ms`, logId: this.request.headers.logId, log: log }
     }
     /**时间重置**/
     public reset() {
         this.date = new Date()
         return this
     }
-    public info(log: Omix) {
-        this.logger.info(this.options.deplayName, this.output(log))
+    public info(log: any) {
+        this.logger.info(this.options.stack, this.output(log))
         return this
     }
-    public error(log: Omix) {
-        this.logger.error(this.options.deplayName, this.output(log))
+    public error(log: any) {
+        this.logger.error(this.options.stack, this.output(log))
         return this
     }
 }
 
 @Injectable()
 export class Logger {
-    public readonly deplayName: string
-    @Inject(WINSTON_MODULE_PROVIDER) protected readonly logger: WinstonLogger
+    protected readonly stack: string
+    protected readonly logger: WinstonService
+    @Inject(WINSTON_MODULE_PROVIDER) protected readonly winston: WinstonLogger
 
     /**创建日志实例方法**/
-    public async fetchServiceTransaction(request: OmixRequest, opts: Omix<{ deplayName: string }>) {
-        return new WinstonService(this.logger, request, opts)
-    }
-
-    /**日志方法名称组合**/
-    public fetchDeplayName(alias?: string) {
-        const suffix = this.deplayName.split(':').pop()
-        return alias ? `${alias}:${suffix}` : this.deplayName
+    public async fetchServiceTransaction(request: OmixRequest, opts: Omix<{ stack?: string }>) {
+        return new WinstonService(this.winston, request, opts)
     }
 
     /**返回包装**/
     public async fetchResolver<T>(data: Partial<OmixResult<T>>) {
         return data
-    }
-
-    /**异常抛出**/
-    public async fetchCatchCompiler(name: string, err: any) {
-        this.logger.error(name, { log: err })
-        throw new HttpException(err.message ?? err.response, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR, err.options)
     }
 }

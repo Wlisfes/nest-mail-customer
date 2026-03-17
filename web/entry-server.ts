@@ -51,6 +51,8 @@ export async function render(request: Request, manifest: Record<string, string[]
     matchedComponents.map(component => {
         const httpServer = component.httpServer || null
         if (httpServer) {
+            /**标记路由级组件httpServer已执行, 避免mixin中重复执行**/
+            component.__httpServerRouteExecuted = true
             if (isPromise(httpServer) === false) {
                 httpServerOptions.push(Promise.resolve(httpServer(config)))
             } else {
@@ -75,6 +77,15 @@ export async function render(request: Request, manifest: Record<string, string[]
     }
 
     const renderCtx: { modules?: string[] } = {}
+    /**通过mixin注入serverPrefetch, 让子组件的httpServer也能在SSR中执行**/
+    app.mixin({
+        async serverPrefetch() {
+            const httpServer = this.$options.httpServer
+            if (httpServer && typeof httpServer === 'function' && !this.$options.__httpServerRouteExecuted) {
+                await httpServer(config)
+            }
+        }
+    })
     const content = await renderToString(app, renderCtx)
     const links = renderPreloadLinks(renderCtx.modules, manifest)
     const state = JSON.stringify(pinia.state.value)

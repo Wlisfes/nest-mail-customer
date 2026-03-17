@@ -9,7 +9,7 @@ export default defineComponent({
                 <router-link to="/" class="flex absolute top-10 left-20">
                     <n-button text focusable={false}>
                         <common-global-wrapper name="nest-logo" color="var(--n-text-color-hover)" size={40}></common-global-wrapper>
-                        <h2 class="m-0 p-bs-8 p-inline-5">Hostmail</h2>
+                        <h2 class="m-0 p-bs-8 p-inline-5">MailServer</h2>
                     </n-button>
                 </router-link>
                 <div class="main-wrapper w-full max-w-480">

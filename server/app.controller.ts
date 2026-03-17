@@ -2,7 +2,7 @@ import { Controller, Get, Header, Request } from '@nestjs/common'
 import { createRouteServer } from '@server/vite.server'
 
 @Controller()
-export class WebController {
+export class AppController {
     @Get('*')
     @Header('Content-Type', 'text/html')
     async fetchBaseRender(@Request() request) {

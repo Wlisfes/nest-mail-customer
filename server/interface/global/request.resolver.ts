@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsNotEmpty, IsNumber, Min, IsArray, IsString } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsNumber, Min, IsArray, IsString } from 'class-validator'
 import { Type } from 'class-transformer'
-import { IsOptional, IsDateCustomize } from '@server/decorator/common.decorator'
+import { IsDateCustomize } from '@server/decorator'
 
 export class OmixColumn {
     @ApiProperty({ description: '分页数', required: false, example: 1 })

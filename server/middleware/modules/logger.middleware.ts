@@ -1,16 +1,9 @@
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common'
 import { Request, Response, NextFunction } from 'express'
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston'
+import { getClientIp } from 'request-ip'
 import { Logger } from 'winston'
-import { fetchIntNumber, fetchIPClient } from '@server/utils/utils-common'
-import * as useragent from 'express-useragent'
-
-@Injectable()
-export class UserAgentMiddleware implements NestMiddleware {
-    use(request: Request, response: Response, next: NextFunction) {
-        useragent.express()(request, response, next)
-    }
-}
+import { v4 } from 'uuid'
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -18,14 +11,13 @@ export class LoggerMiddleware implements NestMiddleware {
 
     async use(request: Omix<Request>, response: Response, next: NextFunction) {
         const date = Date.now()
-        const context = fetchIntNumber()
-        request.ipv4 = fetchIPClient(request)
+        const ipv4 = getClientIp(request)
+        request.ipv4 = ['localhost', '::1', '::ffff:127.0.0.1'].includes(ipv4) ? '127.0.0.1' : ipv4.replace(/^.*:/, '')
+        request.headers.logId = v4()
         request.headers.datetime = date.toString()
-        request.headers.context = context.toString()
         response.on('finish', () => {
-            /**结束日志 endTime**/
             this.logger.info(LoggerMiddleware.name, {
-                context: context.toString(),
+                logId: request.headers.logId,
                 duration: `${Date.now() - date}ms`,
                 log: {
                     url: request.originalUrl,
@@ -37,7 +29,6 @@ export class LoggerMiddleware implements NestMiddleware {
                     host: request.headers.host ?? '',
                     origin: request.headers.origin ?? '',
                     referer: request.headers.referer ?? '',
-                    platform: request.headers.platform,
                     device: request.headers['user-agent'] ?? ''
                 }
             })

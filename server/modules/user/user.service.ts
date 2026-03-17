@@ -4,9 +4,7 @@ import { isEmpty } from 'class-validator'
 import { compareSync } from 'bcryptjs'
 import { Logger, AutoDescriptor } from '@server/modules/logger/logger.service'
 import { DatabaseService } from '@server/modules/database/database.service'
-import { OmixRequest } from '@server/interface'
-import { fetchIntNumber } from '@server/utils/utils-common'
-import { BodyUserRegister, BodyUserLogin, BodySendEmailCode } from '@server/modules/user/user.dto'
+import * as dto from '@server/interface'
 
 /**验证码内存存储**/
 const emailCodeStore = new Map<string, { code: string; expireAt: number }>()
@@ -26,28 +24,11 @@ export class UserService extends Logger {
         return { token: await this.jwtService.signAsync(payload) }
     }
 
-    /**发送邮箱验证码**/
-    @AutoDescriptor
-    public async httpBaseUserSendEmailCode(request: OmixRequest, body: BodySendEmailCode) {
-        try {
-            const logger = await this.fetchServiceTransaction(request, { stack: this.stack })
-            const code = fetchIntNumber({ bit: 6 })
-            /**存储验证码, 5分钟过期**/
-            emailCodeStore.set(body.email, { code, expireAt: Date.now() + 5 * 60 * 1000 })
-            /**日志输出验证码（后续接入SMTP后改为实际发送邮件）**/
-            logger.info(`邮箱验证码 [${body.email}]: ${code}`)
-            return await this.fetchResolver({ message: '验证码已发送' })
-        } catch (err) {
-            throw new HttpException(err.message ?? '验证码发送失败', err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
-        }
-    }
-
     /**用户注册**/
     @AutoDescriptor
-    public async httpBaseUserRegister(request: OmixRequest, body: BodyUserRegister) {
+    public async httpBaseUserRegister(request: dto.OmixRequest, body: dto.UserRegisterOptions) {
         try {
             const logger = await this.fetchServiceTransaction(request, { stack: this.stack })
-
             /**校验邮箱是否已注册**/
             const existUser = await this.database.schemaUser.findOne({ where: { email: body.email } })
             if (existUser) {
@@ -79,7 +60,7 @@ export class UserService extends Logger {
 
     /**用户登录**/
     @AutoDescriptor
-    public async httpBaseUserLogin(request: OmixRequest, body: BodyUserLogin) {
+    public async httpBaseUserLogin(request: dto.OmixRequest, body: dto.UserAuthorizationOptions) {
         try {
             const logger = await this.fetchServiceTransaction(request, { stack: this.stack })
 

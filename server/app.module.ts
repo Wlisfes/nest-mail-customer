@@ -6,10 +6,12 @@ import { TransformInterceptor } from '@server/interceptor/transform.interceptor'
 import { HttpExceptionFilter } from '@server/filters/http-exception.filter'
 import { LoggerModule } from '@server/modules/logger/logger.module'
 import { DatabaseModule } from '@server/modules/database/database.module'
-import { WebModule } from '@server/modules/web/web.module'
+import { UserModule } from '@server/modules/user/user.module'
+import { AppController } from '@server/app.controller'
 
 @Module({
-    imports: [ConfigModule, LoggerModule, DatabaseModule, WebModule],
+    imports: [ConfigModule, LoggerModule, DatabaseModule, UserModule],
+    controllers: [AppController],
     providers: [
         { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
         { provide: APP_FILTER, useClass: HttpExceptionFilter }

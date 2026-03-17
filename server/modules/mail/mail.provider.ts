@@ -47,7 +47,7 @@ export function fetchReadTemplate<T extends Omix>(source: string, options: Omix<
 }
 
 /**发送邮件**/
-export function fetchSendMail(transporter: ClientTransport, options: SendMailOptions) {
+export function fetchSendMailer(transporter: ClientTransport, options: SendMailOptions) {
     return new Promise((resolve, reject) => {
         return transporter.sendMail(options, (error, info) => {
             if (error) {

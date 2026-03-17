@@ -5,13 +5,14 @@ import { ConfigModule } from '@server/modules/config/config.module'
 import { TransformInterceptor } from '@server/interceptor/transform.interceptor'
 import { HttpExceptionFilter } from '@server/filters/http-exception.filter'
 import { LoggerModule } from '@server/modules/logger/logger.module'
+import { JwtModule } from '@server/modules/jwt/jwt.module'
 import { DatabaseModule } from '@server/modules/database/database.module'
 import { MailModule } from '@server/modules/mail/mail.module'
 import { UserModule } from '@server/modules/user/user.module'
 import { AppController } from '@server/app.controller'
 
 @Module({
-    imports: [ConfigModule, LoggerModule, DatabaseModule, MailModule, UserModule],
+    imports: [ConfigModule, LoggerModule, JwtModule, DatabaseModule, MailModule, UserModule],
     controllers: [AppController],
     providers: [
         { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },

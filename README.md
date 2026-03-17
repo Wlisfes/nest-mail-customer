@@ -2,13 +2,13 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-# GMailServer - 邮件聚合管理平台
+# MailServer - 邮件聚合管理平台
 
 > 统一管理多个邮箱账号的 Web 端邮件平台，基于 NestJS + Vue 3 SSR 构建。
 
 ## 项目简介
 
-GMailServer 是一个面向职场人士和自由职业者的邮件聚合平台，解决多邮箱管理痛点：
+MailServer 是一个面向职场人士和自由职业者的邮件聚合平台，解决多邮箱管理痛点：
 
 - **统一入口** — 一个平台管理所有邮箱（QQ、163、Outlook、Gmail）
 - **简单授权** — OAuth2 或应用专用密码快速接入

@@ -2,19 +2,20 @@
 import { defineComponent } from 'vue'
 import { RouterView } from 'vue-router'
 import { useMouse, useStore } from '@/store'
-import { zhCN, dateZhCN } from 'naive-ui'
+import { useI18nContext } from '@/i18n'
 
 export default defineComponent({
     name: 'App',
     setup(props) {
         const { themeStyle, themeOverrides } = useStore(useMouse)
+        const { Locale } = useI18nContext()
 
         return () => (
             <n-config-provider
                 abstract
                 inline-theme-disabled
-                locale={zhCN}
-                date-locale={dateZhCN}
+                locale={Locale.value}
+                date-locale={Locale.value.i18nDate}
                 theme={themeStyle.value}
                 theme-overrides={themeOverrides.value}
             >

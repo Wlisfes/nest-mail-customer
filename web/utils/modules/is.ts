@@ -1,3 +1,5 @@
+export { isEmpty, isNotEmpty } from 'class-validator'
+
 /**
  * @description: 判断值是否未某个类型
  */

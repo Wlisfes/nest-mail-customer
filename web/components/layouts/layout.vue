@@ -1,6 +1,5 @@
 <script lang="tsx">
-import { defineComponent, Fragment } from 'vue'
-import { useGlobal, useMouse, useStore } from '@/store'
+import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: 'Layout',
@@ -12,7 +11,7 @@ export default defineComponent({
                         <router-link to="/" class="flex overflow-hidden">
                             <n-button text focusable={false}>
                                 <common-global-wrapper name="nest-logo" color="var(--n-text-color-hover)" size={40}></common-global-wrapper>
-                                <h2 class="m-0 p-bs-8 p-inline-5">ChatBook</h2>
+                                <h2 class="m-0 p-bs-8 p-inline-5">MailServer</h2>
                             </n-button>
                         </router-link>
                         <n-element class="h-full flex flex-1 items-center justify-end gap-48 p-inline-40">
@@ -23,10 +22,10 @@ export default defineComponent({
                                 <div class="text-16">解决方案</div>
                             </n-button>
                             <n-button text focusable={false}>
-                                <div class="text-16">覆盖范围&定价</div>
+                                <div class="text-16">定价</div>
                             </n-button>
                             <n-button text focusable={false}>
-                                <div class="text-16">支持中心</div>
+                                <div class="text-16">帮助中心</div>
                             </n-button>
                             <n-button text focusable={false}>
                                 <div class="text-16">关于我们</div>
@@ -44,7 +43,7 @@ export default defineComponent({
                                 {/* <layout-common-consumer></layout-common-consumer> */}
                                 <router-link to="/main/register">
                                     <n-button focusable={false} round type="primary">
-                                        免费体验
+                                        立即注册
                                     </n-button>
                                 </router-link>
                             </n-element>

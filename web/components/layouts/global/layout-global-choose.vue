@@ -6,33 +6,33 @@ export default defineComponent({
     name: 'LayoutGlobalChoose',
     setup(props) {
         const { state } = useState({
-            hot: 'WHY CHOOSE US',
-            title: 'ChatBook SMS 的优势',
-            document: `ChatBook SMS 致力使用优质的群发 SMS 解决方案将您的营销内容将通过我们的高质量SMS网关送达至目标受众的设备。`,
+            hot: 'WHY MailServer',
+            title: '一个入口管理所有邮箱账号',
+            document: `MailServer 是面向多邮箱场景的 Web 邮件聚合平台，支持把工作邮箱、个人邮箱和备用邮箱统一接入，在浏览器中完成收件、搜索、发送、同步与提醒。`,
             columns: [
                 {
                     type: 'primary',
                     icon: 'nest-issues-signal',
-                    title: `超广覆盖、自由联通`,
-                    document: `ChatBook SMS 支持 190 多个国家/地区的 800 多个电信网络运营商，便于出海企业简单、安全、稳定的一站式通讯解决方案与您的全球用户实现无障碍的即时通讯连接`
+                    title: `统一收件箱，聚合多个账号`,
+                    document: `支持 QQ 邮箱、网易邮箱、Outlook 与 Gmail 等主流平台接入，统一展示新邮件、已读状态、附件信息和最后同步时间。`
                 },
                 {
                     type: 'warning',
                     icon: 'nest-edit',
-                    title: `不限行业、内容宽松`,
-                    document: `我们致力于创新通信解决方案，让 SMS 消息自由传递，满足您所有短信营销需求。覆盖互联网、金融、信贷、投资、棋牌、游戏、电商、教育等众多领域短信群发`
+                    title: `授权简单，上手成本更低`,
+                    document: `优先支持 OAuth2 授权，也兼容应用专用密码与 IMAP/SMTP 手动配置，让普通用户也能快速完成邮箱接入。`
                 },
                 {
                     type: 'error',
                     icon: 'nest-choose-channel',
-                    title: `优质通道、高效并发`,
-                    document: `创新的通信解决方案，确保您的短信送达至目标受众的设备，分布式服务器，数据秒级触达，高效并发响应与海量数据吞吐引擎支持，安全稳定，秒级触达，高到达率`
+                    title: `实时同步，减少信息遗漏`,
+                    document: `支持手动同步和后台自动同步，可按实时、15 分钟、30 分钟、1 小时等频率拉取邮件，并提供浏览器新邮件提醒。`
                 },
                 {
                     type: 'success',
                     icon: 'nest-choose-backst',
-                    title: `独立后台、实时报告`,
-                    document: `通过 ChatBook SMS 强大的独立后台可以轻松、快速、高效地向客户、潜在客户发送大量短信，保障每一条信息透明化查询，所有通信服务提供可视化图表呈现`
+                    title: `跨平台访问，安全可控`,
+                    document: `基于 Web 技术即可在电脑和平板上访问，结合 JWT、加密存储、账号状态监控与失败重试，兼顾效率与可靠性。`
                 }
             ]
         })

@@ -5,16 +5,16 @@ import { useFormService } from '@/hooks'
 export default defineComponent({
     name: 'MainLogin',
     setup(props) {
-        const { formRef, formState, state, setState, fetchValidater } = useFormService({
+        const { formRef, formState, state, fetchValidater } = useFormService({
             formState: {
                 email: '',
                 password: '',
                 code: ''
             },
             rules: {
-                email: { required: true, trigger: 'blur', message: '请输入登录账号' },
-                password: { required: true, trigger: 'blur', min: 6, max: 18, message: '请输入6~18位登录密码' },
-                code: { required: true, trigger: 'blur', message: '请输入验证码' }
+                email: { required: true, trigger: 'blur', message: '请输入用户名或邮箱' },
+                password: { required: true, trigger: 'blur', min: 8, max: 18, message: '请输入8~18位登录密码' },
+                code: { required: true, trigger: 'blur', message: '请输入安全验证码' }
             }
         })
 
@@ -50,7 +50,7 @@ export default defineComponent({
                         <form-common-input
                             maxlength={64}
                             type="text"
-                            placeholder="请输入邮箱"
+                            placeholder="请输入用户名或邮箱"
                             v-model:value={formState.value.email}
                             input-props={{ autocomplete: 'on' }}
                             prefix={{ name: 'nest-unset-user', size: 22 }}
@@ -60,7 +60,7 @@ export default defineComponent({
                     <n-form-item path="password">
                         <form-common-input
                             maxlength={32}
-                            placeholder="请输入密码"
+                            placeholder="请输入登录密码"
                             type="password"
                             show-password-on="click"
                             input-props={{ autocomplete: 'password' }}
@@ -75,7 +75,7 @@ export default defineComponent({
                             <form-common-input
                                 class="flex-1"
                                 type="text"
-                                placeholder="验证码"
+                                placeholder="请输入安全验证码"
                                 maxlength={4}
                                 v-model:value={formState.value.code}
                                 prefix={{ name: 'nest-unset-codex', size: 22 }}
@@ -91,7 +91,7 @@ export default defineComponent({
                             loading={state.loading}
                             onClick={fetchSubmit}
                         >
-                            立即登录
+                            登录
                         </common-global-button>
                     </n-form-item>
                     <div class="flex flex-1 items-center justify-between">

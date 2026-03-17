@@ -5,31 +5,31 @@ import { useState } from '@/hooks'
 export default defineComponent({
     name: 'LayoutCommonFooter',
     setup(props) {
-        const { state, setState } = useState({
+        const { state } = useState({
             chatBook: {
-                title: 'ChatBook',
-                document: `我们致力于创新通信解决方案，让 SMS 消息自由传递，满足您所有短信营销需求。您可以毫不费力地发送一次性验证码、通知、时事通讯、提醒和营销短信。`
+                title: 'MailServer',
+                document: `统一管理多个邮箱账号的 Web 邮件平台，支持聚合收件箱、账号授权、实时同步、统一搜索和多账号发信，帮助个人与团队减少频繁切换邮箱的成本。`
             },
             about: {
                 title: '关于',
                 columns: [
-                    { link: '/', name: '公司简介' },
+                    { link: '/', name: '产品简介' },
                     { link: '/', name: '联系我们' },
                     { link: '/', name: '隐私政策' },
-                    { link: '/', name: '动态公告' }
+                    { link: '/', name: '更新日志' }
                 ]
             },
             solutions: {
-                title: '产品 & 解决方案',
+                title: '功能导航',
                 columns: [
-                    { link: '/', name: '国内短信' },
-                    { link: '/', name: '国际短信' },
-                    { link: '/', name: '五类短信' },
-                    { link: '/', name: '卡发短信' },
-                    { link: '/', name: '覆盖范围 & 定价' },
-                    { link: '/', name: '使用流程' },
-                    { link: '/', name: '常见问题' },
-                    { link: '/', name: 'API 文档' }
+                    { link: '/', name: '统一收件箱' },
+                    { link: '/', name: '邮箱账号接入' },
+                    { link: '/', name: '邮件搜索' },
+                    { link: '/', name: '写邮件与草稿' },
+                    { link: '/', name: '附件管理' },
+                    { link: '/', name: '同步与提醒' },
+                    { link: '/', name: '联系人管理' },
+                    { link: '/', name: '安全与备份' }
                 ]
             }
         })
@@ -38,11 +38,11 @@ export default defineComponent({
             <n-element class="layout-common-footer flex flex-col overflow-hidden">
                 <div class="chat-connect common-width-inline flex justify-between gap-16 p-block-24">
                     <div class="flex flex-col gap-5 overflow-hidden">
-                        <h1 class="m-0 text-22">订阅 ChatBook SMS 新闻</h1>
-                        <n-text depth={3}>加入 20000 多人使用的 ChatBook SMS 行列</n-text>
+                        <h1 class="m-0 text-22">获取 MailServer 产品更新</h1>
+                        <n-text depth={3}>订阅版本动态、功能开放计划和多邮箱接入指南</n-text>
                     </div>
                     <div class="chat-connect-input flex gap-16 items-center">
-                        <n-input class="flex-1" size="large" placeholder="请输入您的邮箱" />
+                        <n-input class="flex-1" size="large" placeholder="请输入联系邮箱" />
                         <n-button class="w-[var(--chat-connect-mail-width)]" size="large" type="primary">
                             订阅
                         </n-button>
@@ -106,11 +106,11 @@ export default defineComponent({
                 <n-divider class="m-0!"></n-divider>
                 <n-element class="common-width-inline flex flex-wrap gap-16 text-12 items-center justify-between p-block-16 gap-y-5">
                     <n-ellipsis tooltip={false}>
-                        <n-text>{`Copyright © 2021-${new Date().getFullYear()} ChatBook. All rights reserved.`}</n-text>
+                        <n-text>{`Copyright © 2021-${new Date().getFullYear()} MailServer. All rights reserved.`}</n-text>
                     </n-ellipsis>
                     <n-a class="whitespace-nowrap decoration-none text-center" target="_blank" href="https://beian.miit.gov.cn">
                         <n-button text focusable={false} class="text-12">
-                            粤ICP备18016996号-1
+                            备案信息待补充
                         </n-button>
                     </n-a>
                 </n-element>

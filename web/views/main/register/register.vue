@@ -5,7 +5,7 @@ import { useFormService } from '@/hooks'
 export default defineComponent({
     name: 'MainRegister',
     setup(props) {
-        const { formRef, formState, state, setState, fetchValidater } = useFormService({
+        const { formRef, formState, state, fetchValidater } = useFormService({
             formState: {
                 nickname: '',
                 email: '',
@@ -13,10 +13,10 @@ export default defineComponent({
                 code: ''
             },
             rules: {
-                nickname: { required: true, trigger: 'blur', message: '请输入昵称' },
-                email: { required: true, trigger: 'blur', message: '请输入邮箱' },
-                password: { required: true, trigger: 'blur', min: 6, max: 18, message: '请输入6~18位登录密码' },
-                code: { required: true, trigger: 'blur', message: '请输入验证码' }
+                nickname: { required: true, trigger: 'blur', message: '请输入用户名' },
+                email: { required: true, trigger: 'blur', message: '请输入注册邮箱' },
+                password: { required: true, trigger: 'blur', min: 8, max: 18, message: '请输入8~18位密码' },
+                code: { required: true, trigger: 'blur', message: '请输入邮箱验证码' }
             }
         })
 
@@ -52,7 +52,7 @@ export default defineComponent({
                         <form-common-input
                             maxlength={32}
                             type="text"
-                            placeholder="请输入昵称"
+                            placeholder="请输入用户名"
                             v-model:value={formState.value.nickname}
                             input-props={{ autocomplete: 'on' }}
                             prefix={{ name: 'nest-unset-user', size: 20 }}
@@ -63,7 +63,7 @@ export default defineComponent({
                         <form-common-input
                             maxlength={64}
                             type="text"
-                            placeholder="请输入邮箱"
+                            placeholder="请输入注册邮箱"
                             v-model:value={formState.value.email}
                             input-props={{ autocomplete: 'on' }}
                             prefix={{ name: 'nest-unset-user', size: 22 }}
@@ -73,7 +73,7 @@ export default defineComponent({
                     <n-form-item path="password">
                         <form-common-input
                             maxlength={32}
-                            placeholder="请输入密码"
+                            placeholder="请输入登录密码"
                             type="password"
                             show-password-on="click"
                             input-props={{ autocomplete: 'password' }}
@@ -88,7 +88,7 @@ export default defineComponent({
                             <form-common-input
                                 class="flex-1"
                                 type="text"
-                                placeholder="验证码"
+                                placeholder="请输入邮箱验证码"
                                 maxlength={4}
                                 v-model:value={formState.value.code}
                                 prefix={{ name: 'nest-unset-codex', size: 22 }}
@@ -104,7 +104,7 @@ export default defineComponent({
                             loading={state.loading}
                             onClick={fetchSubmit}
                         >
-                            立即登录
+                            立即注册
                         </common-global-button>
                     </n-form-item>
                     <div class="flex flex-1 items-center justify-between">

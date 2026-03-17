@@ -8,14 +8,14 @@ export default defineComponent({
     setup(props) {
         const { inverted } = useStore(useMouse)
         const { state } = useState({
-            hot: 'Important Facts About SMS',
-            title: `关于 SMS 的重要事实-在移动互联网时代，SMS 是接触潜在客户的最直接方式之一`,
+            hot: 'PLATFORM HIGHLIGHTS',
+            title: `围绕收件、发送、搜索与同步，打造真正可用的 Web 端邮件工作台`,
             document: ``,
             columns: [
-                { title: '1520万', document: '全世界每分钟发送的短信条数' },
-                { title: '95%', document: '短信在送达后三分钟内被阅读' },
-                { title: '98%', document: '已发送的短信被用户查看' },
-                { title: '10倍+', document: '选择 SMS 营销可以获得更多利润' }
+                { title: '4 类接入', document: 'QQ、网易、Outlook、Gmail 等主流邮箱统一接入' },
+                { title: '< 3 秒', document: '首屏加载时间目标，保障首次进入页面的响应速度' },
+                { title: '< 5 分钟', document: '平均邮件同步延迟目标，重要邮件尽快可见' },
+                { title: '99%+', document: '邮件同步与发送成功率目标，支撑日常稳定使用' }
             ]
         })
 
@@ -32,7 +32,7 @@ export default defineComponent({
                                         {item.title}
                                     </n-text>
                                 </n-h1>
-                                <n-text class="16">{item.document}</n-text>
+                                <n-text class="text-16 text-center">{item.document}</n-text>
                             </div>
                         ))}
                     </div>
@@ -48,17 +48,17 @@ export default defineComponent({
                                         name="nest-issues-chat"
                                     ></common-global-wrapper>
                                     <n-text class="text-18" strong>
-                                        ChatBook
+                                        MailServer
                                     </n-text>
                                 </div>
                                 <n-h1 class="m-0 text-center text-size-[var(--chat-super-title-size)]">
-                                    创新通信解决方案，
+                                    把工作邮箱、个人邮箱和备用邮箱
                                     <br />
-                                    ChatBook 让 SMS 消息自由传递。
+                                    收进一个清晰统一的邮件界面
                                 </n-h1>
                             </div>
                             <n-button class="min-w-120" size="large" type="primary">
-                                <n-text>立即使用</n-text>
+                                <n-text>开始添加邮箱</n-text>
                             </n-button>
                         </div>
                     </n-card>

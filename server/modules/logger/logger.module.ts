@@ -16,7 +16,7 @@ export function fetchReduces(data: Omix) {
 
 /**写入数据组合**/
 export function fetchWrite(data: Omix, opts: Omix<{ middleware?: string; log: any }>) {
-    return `服务进程:[${process.pid}]  ${data.timestamp}  ${data.level.toUpperCase()}  上下文ID:[${data.context ?? ''}]  执行方法:[${data.message}]  ${opts.middleware ?? ''}耗时:${data.duration}  {\n    ${opts.log}\n}`
+    return `服务进程:[${process.pid}]  ${data.timestamp}  ${data.level.toUpperCase()}  日志ID:[${data.logId ?? ''}]  执行方法:[${data.message}]  ${opts.middleware ?? ''}耗时:${data.duration}  {\n    ${opts.log}\n}`
 }
 
 /**数据拆解**/
@@ -25,8 +25,8 @@ export function fetchTransports(data: Omix) {
     const pid = chalk.hex('#fc5404')(`服务进程:[${process.pid}]`)
     const timestamp = chalk.hex('#fb9300')(`${data.timestamp}`)
     const message = chalk.hex('#ff3d68')(`执行方法:[${data.message}]`)
-    const context = fetchWherer(Boolean(data.context), {
-        value: chalk.hex('#536dfe')(`日志ID:[${data.context ?? ''}]`),
+    const logId = fetchWherer(Boolean(data.logId), {
+        value: chalk.hex('#536dfe')(`日志ID:[${data.logId ?? ''}]`),
         defaultValue: ''
     })
     const level = fetchWherer(data.level === 'error', {
@@ -41,7 +41,7 @@ export function fetchTransports(data: Omix) {
         value: chalk.hex('#fc5404')(`接口地址:[${data.log?.url ?? ''}]`, ''),
         defaultValue: ''
     })
-    const module = [platform, pid, timestamp, level, context, message].filter(isNotEmpty).join(`  `)
+    const module = [platform, pid, timestamp, level, logId, message].filter(isNotEmpty).join(`  `)
 
     return { url, module, duration }
 }

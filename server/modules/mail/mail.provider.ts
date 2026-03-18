@@ -8,17 +8,26 @@ export const CLIENT_TRANSPORT = Symbol('CLIENT_TRANSPORT')
 export type ClientTransport = ReturnType<typeof createTransport>
 
 export interface InitOptions {
+    /**邮件服务器地址**/
     host: string
+    /**邮件服务器端口**/
     port: number
+    /**是否使用SSL**/
     secure: boolean
+    /**发件人邮箱**/
     user: string
+    /**发件人密码**/
     password: string
 }
 
 export interface SendMailOptions {
+    /**发件人邮箱**/
     from: string
+    /**收件人邮箱**/
     to: string
-    subject: string
+    /**邮件标题**/
+    subject?: string
+    /**邮件内容**/
     html: string
 }
 

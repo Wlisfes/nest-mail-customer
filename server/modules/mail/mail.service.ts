@@ -18,13 +18,8 @@ export class MailService extends Logger {
     @AutoDescriptor
     public async fetchSendMailTransport(request: OmixRequest, options: Parameters<typeof fetchSendMailer>['1']) {
         try {
-            const logger = await this.fetchServiceTransaction(request, { stack: this.stack })
             return await fetchSendMailer(this.client, options).then(async data => {
-                // this.logger.info(
-                //     [NodemailerService.name, this.httpCustomizeNodemailer.name].join(':'),
-                //     divineLogger(headers, { message: '发送邮件成功', data })
-                // )
-                this.logger.info(`发送邮件成功: ${JSON.stringify(data)}`)
+                this.logger.info(data)
                 return await this.fetchResolver(data)
             })
         } catch (err) {
@@ -35,13 +30,18 @@ export class MailService extends Logger {
 
     /**发送验证码**/
     @AutoDescriptor
-    public async fetchSendCodexTransport(request: OmixRequest, options: env.CodexTransportOptions) {
+    public async fetchSendCodexTransport(request: OmixRequest, target: env.CodexTarget, options: env.CodexTransportOptions) {
         try {
-            const from = this.configService.get('SMTP_USER')
-            return await fetchReadTemplate(options.target, options).then(async html => {
-                return await fetchSendMailer(this.client, { from, to: options.to, subject: options.title, html }).then(async data => {
-                    this.logger.info(`发送验证码邮件成功: ${JSON.stringify(data)}`)
-                    return await this.fetchResolver({ message: '验证码发送成功' })
+            const from = `"Mail Server" <${this.configService.get('SMTP_USER')}>`
+            return await fetchReadTemplate(target, options).then(async html => {
+                return await fetchSendMailer(this.client, {
+                    from,
+                    html,
+                    to: options.email,
+                    subject: this.configService.get('NODE_SEO_TITLE')
+                }).then(async data => {
+                    this.logger.info(data)
+                    return await this.fetchResolver(data)
                 })
             })
         } catch (err) {

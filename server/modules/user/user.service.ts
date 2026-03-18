@@ -40,13 +40,14 @@ export class UserService extends Logger {
                 const code = Math.random().toString().slice(-6)
                 await this.redisService.setStore(request, { key, data: code, seconds: 5 * 60 })
                 /**发送验证码邮件**/
-                return await this.mailService.fetchSendCodexTransport(request, {
-                    target: 'common',
+                await this.mailService.fetchSendCodexTransport(request, 'register', {
                     title: '注册验证码',
-                    to: body.email,
+                    email: body.email,
                     code,
                     ttl: 5
                 })
+                this.logger.info(`注册验证码发送成功: 验证码${code}，有效期5分钟`)
+                return await this.fetchResolver({ message: '验证码发送成功' })
             })
         } catch (err) {
             this.logger.error(err)

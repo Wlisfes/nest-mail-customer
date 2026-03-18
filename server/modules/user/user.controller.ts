@@ -7,6 +7,14 @@ import * as dto from '@server/interface'
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
+    @ApiServiceDecorator(Post('/codex/register'), {
+        operation: { summary: '发送注册验证码' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpBaseUserCodexRegister(@Request() request: dto.OmixRequest, @Body() body: dto.UserCodexRegisterOptions) {
+        return await this.userService.httpBaseUserCodexRegister(request, body)
+    }
+
     @ApiServiceDecorator(Post('/register'), {
         operation: { summary: '账号注册' },
         response: { status: 200, description: 'OK' }

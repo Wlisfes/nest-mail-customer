@@ -36,9 +36,9 @@ export async function fetchCreateTransport(options: InitOptions) {
 }
 
 /**读取模板**/
-export function fetchReadTemplate<T extends Omix>(source: string, options: Omix<T> = {} as Omix<T>) {
+export async function fetchReadTemplate<T extends Omix>(target: string, options: Omix<T> = {} as Omix<T>) {
     try {
-        const route = join(process.cwd(), `./src/services/nodemailer/templates/${source || 'common.html'}`)
+        const route = join(process.cwd(), `./server/modules/mail/templates/${target || 'common'}.html`)
         const content = readFileSync(route, 'utf8')
         return compile(content)(options)
     } catch (e) {

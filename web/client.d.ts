@@ -18,11 +18,17 @@ export interface MateServerOptions extends Omix {
 
 /**服务端异步获取数据上下文**/
 export interface ContextServerOptions {
+    /**路由信息**/
     route: RouteLocationNormalizedLoaded
+    /**日志**/
     logger: Logger
+    /**状态管理**/
     pinia: Pinia
+    /**路由**/
     router: Router
+    /**请求**/
     request: Request
+    /**环境变量**/
     env: ImportMetaEnv
 }
 

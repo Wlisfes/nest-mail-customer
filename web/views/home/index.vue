@@ -4,7 +4,7 @@ import { defineComponent } from 'vue'
 export default defineComponent({
     name: 'BaseHome',
     async httpServer({ logger }) {
-        logger.info('[Home.vue]', {
+        logger.info('Home.vue', {
             title: 'Mail Server Home',
             date: Date.now()
         })

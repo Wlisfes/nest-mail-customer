@@ -5,7 +5,7 @@ import { useState } from '@/hooks'
 export default defineComponent({
     name: 'LayoutGlobalChoose',
     async httpServer({ logger }) {
-        logger.info('[layout-global-choose.vue]', {
+        logger.info('layout-global-choose.vue', {
             title: 'layout-global-choose',
             date: Date.now()
         })

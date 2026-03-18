@@ -1,7 +1,7 @@
 <script lang="tsx">
 import { defineComponent } from 'vue'
 import { useFormService, useCoutext, AUTH } from '@/hooks'
-import { httpBaseUserAuthorization } from '@/services/user.service'
+import * as Service from '@/api'
 
 export default defineComponent({
     name: 'MainLogin',
@@ -25,7 +25,7 @@ export default defineComponent({
                     return await setState({ loading: false, disabled: false } as never)
                 }
                 try {
-                    return await httpBaseUserAuthorization({
+                    return await Service.httpBaseUserAuthorization({
                         email: formState.value.email,
                         password: window.btoa(encodeURIComponent(formState.value.password))
                     }).then(async ({ data }) => {

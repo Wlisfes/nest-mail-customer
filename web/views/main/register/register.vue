@@ -1,7 +1,7 @@
 <script lang="tsx">
 import { defineComponent } from 'vue'
 import { useFormService } from '@/hooks'
-import { httpBaseUserRegister } from '@/services/user.service'
+import * as Service from '@/api'
 
 export default defineComponent({
     name: 'MainRegister',
@@ -26,7 +26,7 @@ export default defineComponent({
                     return await setState({ loading: false, disabled: false } as never)
                 }
                 try {
-                    return await httpBaseUserRegister({
+                    return await Service.httpBaseUserRegister({
                         nickname: formState.value.nickname,
                         email: formState.value.email,
                         password: window.btoa(encodeURIComponent(formState.value.password))

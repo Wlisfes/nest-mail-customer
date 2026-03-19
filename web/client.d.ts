@@ -37,6 +37,10 @@ declare global {
         <T = any, R = AxiosResponse<T>, D = any>(config: AxiosRequestConfig<D>): Promise<R & ResultResolver<T>>
         <T = any, R = AxiosResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R & ResultResolver<T>>
     }
+    interface Window {
+        $message: import('naive-ui').MessageApi | undefined
+        $dialog: import('naive-ui').DialogApi | undefined
+    }
 }
 
 declare module 'vue' {

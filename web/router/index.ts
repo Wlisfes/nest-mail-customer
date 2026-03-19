@@ -7,6 +7,11 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
         history: options.ssr ? createMemoryHistory() : createWebHistory(),
         routes: [
             {
+                path: '/manager',
+                meta: { AUTH: 'AUTH' },
+                component: () => import('@/views/manager/index.vue')
+            },
+            {
                 path: '/',
                 name: Layout.name,
                 component: Layout,
@@ -15,11 +20,6 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         path: '/',
                         meta: { AUTH: 'NONE' },
                         component: () => import('@/views/home/index.vue')
-                    },
-                    {
-                        path: '/manager',
-                        meta: { AUTH: 'AUTH' },
-                        component: () => import('@/views/manager/index.vue')
                     },
                     {
                         path: '/:pathMatch(.*)*',

@@ -5,3 +5,5 @@ export * from '@server/interface/global/redis.resolver'
 export * from '@server/interface/global/mail.resolver'
 /**swagger**/
 export * from '@server/interface/swagger/user.dto'
+export * from '@server/interface/swagger/account.dto'
+export * from '@server/interface/swagger/mailbox.dto'

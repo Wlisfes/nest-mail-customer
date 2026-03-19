@@ -10,10 +10,12 @@ import { RedisModule } from '@server/modules/redis/redis.module'
 import { DatabaseModule } from '@server/modules/database/database.module'
 import { MailModule } from '@server/modules/mail/mail.module'
 import { UserModule } from '@server/modules/user/user.module'
+import { AccountModule } from '@server/modules/account/account.module'
+import { MailboxModule } from '@server/modules/mailbox/mailbox.module'
 import { AppController } from '@server/app.controller'
 
 @Module({
-    imports: [ConfigModule, LoggerModule, JwtModule, RedisModule, DatabaseModule, MailModule, UserModule],
+    imports: [ConfigModule, LoggerModule, JwtModule, RedisModule, DatabaseModule, MailModule, UserModule, AccountModule, MailboxModule],
     controllers: [AppController],
     providers: [
         { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },

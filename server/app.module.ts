@@ -1,7 +1,7 @@
 import { Module, NestModule, RequestMethod, MiddlewareConsumer } from '@nestjs/common'
 import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core'
 import { ConfigModule } from '@server/modules/config/config.module'
-import { UserAgentMiddleware, LoggerMiddleware } from '@server/middleware'
+import { UserAgentMiddleware, LoggerMiddleware, AuthMiddleware } from '@server/middleware'
 import { TransformInterceptor } from '@server/interceptor/transform.interceptor'
 import { HttpExceptionFilter } from '@server/filters/http-exception.filter'
 import { LoggerModule } from '@server/modules/logger/logger.module'
@@ -25,6 +25,7 @@ import { AppController } from '@server/app.controller'
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
         consumer.apply(UserAgentMiddleware).forRoutes('*')
+        consumer.apply(AuthMiddleware).forRoutes({ path: 'api/*', method: RequestMethod.ALL })
         consumer.apply(LoggerMiddleware).forRoutes({ path: 'api/*', method: RequestMethod.ALL })
     }
 }

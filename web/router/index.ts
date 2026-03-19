@@ -50,6 +50,10 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
 
     /**路由守卫**/
     router.beforeEach((to, from, next) => {
+        /**SSR 模式下跳过 auth guard，避免 hydration mismatch**/
+        if (options.ssr) {
+            return next()
+        }
         const { cookies } = useCoutext()
         const token = cookies.get(AUTH.APP_NEST_TOKEN)
         const authMode = to.meta?.AUTH as string

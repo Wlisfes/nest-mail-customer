@@ -1,5 +1,5 @@
 <script lang="tsx">
-import { defineComponent, ref, watch } from 'vue'
+import { defineComponent, ref, onMounted } from 'vue'
 import * as Service from '@/api'
 import MailAccountModal from './components/mail-account-modal.vue'
 import MailSidebar from './components/mail-sidebar.vue'
@@ -15,7 +15,7 @@ export default defineComponent({
     async httpServer({ logger }) {
         logger.info('[Manager.vue]', { title: 'Mail Server Manager', date: Date.now() })
     },
-    setup(props) {
+    setup() {
         /**状态**/
         const accounts = ref<Array<any>>([])
         const currentAccountId = ref(0)
@@ -79,13 +79,14 @@ export default defineComponent({
             selectedMail.value = null
         }
 
-        /**初始化加载**/
-        fetchAccounts()
+        /**初始化加载（仅客户端）**/
+        onMounted(() => {
+            fetchAccounts()
+        })
 
-        /**当前视图活跃类型（用于侧边栏高亮）**/
+        /**当前视图活跃类型**/
         function getActiveView() {
-            if (viewMode.value === 'dashboard') return 'dashboard'
-            return 'folder'
+            return viewMode.value === 'dashboard' ? 'dashboard' : 'folder'
         }
 
         /**当前选中邮箱的email**/
@@ -113,7 +114,7 @@ export default defineComponent({
                 default:
                     if (!currentAccountId.value) {
                         return (
-                            <n-element class="flex flex-col flex-1 items-center justify-center">
+                            <div class="flex flex-col flex-1 items-center justify-center">
                                 <n-empty description="请先在左侧添加邮箱账号">
                                     {{
                                         extra: () => (
@@ -129,7 +130,7 @@ export default defineComponent({
                                         )
                                     }}
                                 </n-empty>
-                            </n-element>
+                            </div>
                         )
                     }
                     return <MailInbox accountId={currentAccountId.value} onSelect={onSelectMail} />
@@ -137,9 +138,9 @@ export default defineComponent({
         }
 
         return () => (
-            <n-element class="manager-container">
+            <n-layout class="manager-layout" has-sider>
                 {/* 侧边栏 */}
-                <div class="manager-sidebar">
+                <n-layout-sider width={260} bordered content-class="flex flex-col" native-scrollbar={false}>
                     <MailSidebar
                         accounts={accounts.value}
                         currentAccountId={currentAccountId.value}
@@ -159,7 +160,6 @@ export default defineComponent({
                                 viewMode.value = 'inbox'
                                 selectedMail.value = null
                             }
-                            // 其他文件夹暂时也跳转到 inbox
                         }}
                         onSelectAccount={(keyId: number) => {
                             currentAccountId.value = keyId
@@ -175,54 +175,32 @@ export default defineComponent({
                             selectedMail.value = null
                         }}
                     />
-                </div>
+                </n-layout-sider>
 
                 {/* 右侧主区域 */}
-                <div class="manager-main">
+                <n-layout content-class="flex flex-col">
                     {/* 顶部工具栏 */}
-                    <MailToolbar userEmail={getCurrentEmail()} />
+                    <n-layout-header bordered class="h-50">
+                        <MailToolbar userEmail={getCurrentEmail()} />
+                    </n-layout-header>
 
                     {/* 内容区 */}
-                    <div class="manager-content">{renderContent()}</div>
-                </div>
+                    <n-layout-content class="flex-1" content-class="flex flex-col h-full" native-scrollbar={false}>
+                        {renderContent()}
+                    </n-layout-content>
+                </n-layout>
 
                 {/* 添加邮箱弹窗 */}
                 <MailAccountModal v-model:visible={showAddModal.value} onSuccess={fetchAccounts} />
-            </n-element>
+            </n-layout>
         )
     }
 })
 </script>
 
 <style lang="scss" scoped>
-.manager-container {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-    height: 100%;
-}
-
-.manager-sidebar {
-    width: 260px;
-    flex-shrink: 0;
-    border-right: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.12));
-    overflow-y: auto;
-    overflow-x: hidden;
-    background: var(--n-card-color, #fff);
-}
-
-.manager-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-}
-
-.manager-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+.manager-layout {
+    height: 100vh;
     overflow: hidden;
 }
 </style>

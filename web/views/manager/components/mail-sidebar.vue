@@ -19,7 +19,7 @@ export default defineComponent({
         activeView: { type: String, default: 'dashboard' },
         unreadCount: { type: Number, default: 0 }
     },
-    emits: ['compose', 'select-folder', 'select-account', 'delete-account', 'add-account', 'go-dashboard'],
+    emits: ['compose', 'selectFolder', 'selectAccount', 'deleteAccount', 'addAccount', 'goDashboard'],
     setup(props, { emit }) {
         /**生成首字母头像**/
         function getAvatar(email: string) {
@@ -73,7 +73,7 @@ export default defineComponent({
                 <div class="sidebar-section">
                     <div
                         class={['sidebar-folder-item', props.activeView === 'dashboard' ? 'active' : '']}
-                        onClick={() => emit('go-dashboard')}
+                        onClick={() => emit('goDashboard')}
                     >
                         <span class="folder-icon">📊</span>
                         <span class="folder-label">仪表盘</span>
@@ -92,7 +92,7 @@ export default defineComponent({
                                 'sidebar-folder-item',
                                 props.activeView === 'folder' && props.activeFolder === folder.key ? 'active' : ''
                             ]}
-                            onClick={() => emit('select-folder', folder.key)}
+                            onClick={() => emit('selectFolder', folder.key)}
                         >
                             <span class="folder-icon">{folder.icon}</span>
                             <span class="folder-label">{folder.label}</span>
@@ -107,7 +107,7 @@ export default defineComponent({
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">
                         <span>我的邮箱</span>
-                        <n-button text type="primary" size="tiny" onClick={() => emit('add-account')}>
+                        <n-button text type="primary" size="tiny" onClick={() => emit('addAccount')}>
                             + 添加
                         </n-button>
                     </div>
@@ -123,7 +123,7 @@ export default defineComponent({
                                 <div
                                     key={acc.keyId}
                                     class={['sidebar-account-item', props.currentAccountId === acc.keyId ? 'active' : '']}
-                                    onClick={() => emit('select-account', acc.keyId)}
+                                    onClick={() => emit('selectAccount', acc.keyId)}
                                 >
                                     <div class="account-avatar" style={{ background: getAvatarColor(acc.email) }}>
                                         {getAvatar(acc.email)}
@@ -141,7 +141,7 @@ export default defineComponent({
                                         class="account-delete"
                                         onClick={(e: Event) => {
                                             e.stopPropagation()
-                                            emit('delete-account', acc.keyId)
+                                            emit('deleteAccount', acc.keyId)
                                         }}
                                     >
                                         删除
@@ -199,6 +199,7 @@ export default defineComponent({
         font-weight: 700;
         letter-spacing: -0.5px;
         background: linear-gradient(135deg, #536dfe 0%, #7c4dff 100%);
+        background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }

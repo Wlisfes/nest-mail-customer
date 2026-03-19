@@ -47,7 +47,13 @@ async function bootstrap() {
         app.use(compression())
     } else {
         const vite = await createViteServer()
-        await app.use(vite.middlewares)
+        /**Vite 中间件跳过 /api/ 请求，由 NestJS 处理**/
+        await app.use((req, res, next) => {
+            if (req.url.startsWith('/api/')) {
+                return next()
+            }
+            return vite.middlewares.handle(req, res, next)
+        })
     }
     return await setupSwagger(app).then(async () => {
         return await app.listen(process.env.NODE_PORT).then(() => {

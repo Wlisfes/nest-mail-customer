@@ -7,9 +7,14 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
         history: options.ssr ? createMemoryHistory() : createWebHistory(),
         routes: [
             {
-                path: '/manager',
-                meta: { AUTH: 'AUTH' },
-                component: () => import('@/views/manager/index.vue')
+                path: '/main/login',
+                meta: { AUTH: 'AUTH_NONE' },
+                component: () => import('@/views/main/login/login.vue')
+            },
+            {
+                path: '/main/register',
+                meta: { AUTH: 'AUTH_NONE' },
+                component: () => import('@/views/main/register/register.vue')
             },
             {
                 path: '/',
@@ -22,26 +27,14 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         component: () => import('@/views/home/index.vue')
                     },
                     {
+                        path: '/manager',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/index.vue')
+                    },
+                    {
                         path: '/:pathMatch(.*)*',
                         meta: { AUTH: 'NONE' },
                         component: () => import('@/views/error/404.vue')
-                    }
-                ]
-            },
-            {
-                path: '/main',
-                component: () => import('@/views/main/layout/layout.vue'),
-                redirect: '/main/login',
-                children: [
-                    {
-                        path: '/main/login',
-                        meta: { AUTH: 'AUTH_NONE' },
-                        component: () => import('@/views/main/login/login.vue')
-                    },
-                    {
-                        path: '/main/register',
-                        meta: { AUTH: 'AUTH_NONE' },
-                        component: () => import('@/views/main/register/register.vue')
                     }
                 ]
             }
@@ -51,9 +44,9 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
     /**路由守卫**/
     router.beforeEach((to, from, next) => {
         /**SSR 模式下跳过 auth guard，避免 hydration mismatch**/
-        if (options.ssr) {
-            return next()
-        }
+        // if (options.ssr) {
+        //     return next()
+        // }
         const { cookies } = useCoutext()
         const token = cookies.get(AUTH.APP_NEST_TOKEN)
         const authMode = to.meta?.AUTH as string

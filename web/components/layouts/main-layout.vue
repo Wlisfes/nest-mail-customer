@@ -3,7 +3,7 @@ import { defineComponent } from 'vue'
 
 export default defineComponent({
     name: 'MainLayout',
-    setup(props) {
+    setup(props, { slots }) {
         return () => (
             <n-element class="main-layout w-full h-full flex flex-col justify-end items-end">
                 <router-link to="/" class="flex absolute top-10 left-20">
@@ -20,7 +20,7 @@ export default defineComponent({
                                 <h2 class="m-0 text-20 p-bs-8 p-inline-8">欢迎使用 Mail Server</h2>
                             </n-button>
                         </div>
-                        <router-view></router-view>
+                        {slots.default && slots.default()}
                     </n-card>
                 </div>
             </n-element>

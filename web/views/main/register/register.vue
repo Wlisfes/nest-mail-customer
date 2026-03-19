@@ -40,66 +40,75 @@ export default defineComponent({
         }
 
         return () => (
-            <n-element class="w-full select-none">
-                <n-form size="large" ref={formRef} model={formState.value} rules={state.rules} disabled={state.loading} show-label={false}>
-                    <n-form-item path="nickname">
-                        <form-common-input
-                            maxlength={32}
-                            type="text"
-                            placeholder="请输入用户名"
-                            v-model:value={formState.value.nickname}
-                            input-props={{ autocomplete: 'on' }}
-                            prefix={{ name: 'nest-unset-user', size: 20 }}
-                            onSubmit={fetchSubmit}
-                        ></form-common-input>
-                    </n-form-item>
-                    <n-form-item path="email">
-                        <form-common-input
-                            maxlength={64}
-                            type="text"
-                            placeholder="请输入注册邮箱"
-                            v-model:value={formState.value.email}
-                            input-props={{ autocomplete: 'on' }}
-                            prefix={{ name: 'nest-unset-user', size: 22 }}
-                            onSubmit={fetchSubmit}
-                        ></form-common-input>
-                    </n-form-item>
-                    <n-form-item path="password">
-                        <form-common-input
-                            maxlength={32}
-                            placeholder="请输入登录密码"
-                            type="password"
-                            show-password-on="click"
-                            input-props={{ autocomplete: 'password' }}
-                            style={{ '--input-password-right': '46px' }}
-                            v-model:value={formState.value.password}
-                            prefix={{ name: 'nest-unset-ockes', size: 22 }}
-                            onSubmit={fetchSubmit}
-                        ></form-common-input>
-                    </n-form-item>
-                    <n-form-item>
-                        <common-global-button
-                            class="w-full"
-                            type="info"
-                            disabled={state.loading}
-                            loading={state.loading}
-                            onClick={fetchSubmit}
-                        >
-                            立即注册
-                        </common-global-button>
-                    </n-form-item>
-                    <div class="flex flex-1 items-center justify-between">
-                        <div class="flex items-center">
-                            <n-text>已有账号？</n-text>
-                            <router-link to="/main/login">
-                                <n-button text type="primary" focusable={false}>
-                                    去登录
-                                </n-button>
-                            </router-link>
+            <main-layout>
+                <n-element class="w-full select-none">
+                    <n-form
+                        size="large"
+                        ref={formRef}
+                        model={formState.value}
+                        rules={state.rules}
+                        disabled={state.loading}
+                        show-label={false}
+                    >
+                        <n-form-item path="nickname">
+                            <form-common-input
+                                maxlength={32}
+                                type="text"
+                                placeholder="请输入用户名"
+                                v-model:value={formState.value.nickname}
+                                input-props={{ autocomplete: 'on' }}
+                                prefix={{ name: 'nest-unset-user', size: 20 }}
+                                onSubmit={fetchSubmit}
+                            ></form-common-input>
+                        </n-form-item>
+                        <n-form-item path="email">
+                            <form-common-input
+                                maxlength={64}
+                                type="text"
+                                placeholder="请输入注册邮箱"
+                                v-model:value={formState.value.email}
+                                input-props={{ autocomplete: 'on' }}
+                                prefix={{ name: 'nest-unset-user', size: 22 }}
+                                onSubmit={fetchSubmit}
+                            ></form-common-input>
+                        </n-form-item>
+                        <n-form-item path="password">
+                            <form-common-input
+                                maxlength={32}
+                                placeholder="请输入登录密码"
+                                type="password"
+                                show-password-on="click"
+                                input-props={{ autocomplete: 'password' }}
+                                style={{ '--input-password-right': '46px' }}
+                                v-model:value={formState.value.password}
+                                prefix={{ name: 'nest-unset-ockes', size: 22 }}
+                                onSubmit={fetchSubmit}
+                            ></form-common-input>
+                        </n-form-item>
+                        <n-form-item>
+                            <common-global-button
+                                class="w-full"
+                                type="info"
+                                disabled={state.loading}
+                                loading={state.loading}
+                                onClick={fetchSubmit}
+                            >
+                                立即注册
+                            </common-global-button>
+                        </n-form-item>
+                        <div class="flex flex-1 items-center justify-between">
+                            <div class="flex items-center">
+                                <n-text>已有账号？</n-text>
+                                <router-link to="/main/login">
+                                    <n-button text type="primary" focusable={false}>
+                                        去登录
+                                    </n-button>
+                                </router-link>
+                            </div>
                         </div>
-                    </div>
-                </n-form>
-            </n-element>
+                    </n-form>
+                </n-element>
+            </main-layout>
         )
     }
 })

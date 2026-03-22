@@ -33,9 +33,17 @@ export interface ContextServerOptions {
 }
 
 declare global {
+    /**axios扩展**/
     interface AxiosRequest extends AxiosInstance {
         <T = any, R = AxiosResponse<T>, D = any>(config: AxiosRequestConfig<D>): Promise<R & ResultResolver<T>>
         <T = any, R = AxiosResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R & ResultResolver<T>>
+    }
+    /**应用启动参数**/
+    export interface AppOptions extends Omix {
+        /**是否服务端渲染**/
+        ssr: boolean
+        /**请求**/
+        request?: Request
     }
 }
 

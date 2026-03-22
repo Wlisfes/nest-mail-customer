@@ -16,7 +16,6 @@ export enum AUTH {
 
 export function useCoutext(options: CookieSetOptions = { path: '/', maxAge: 30 * 24 * 60 * 60 }) {
     const cookies = new Cookies(ctx.value.headers?.cookie, options)
-    console.log(`cookies:`, cookies)
 
     return { ctx, cookies, AUTH }
 }

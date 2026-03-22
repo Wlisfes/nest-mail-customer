@@ -44,7 +44,7 @@ export async function fetchContentRender(html: string, opts: EntryOptions) {
         .replace(`!--app-ssr-keywords--`, opts.meta.keywords ?? '')
         .replace(`!--app-ssr-description--`, opts.meta.description ?? '')
         .replace(`'<!--app--ssr-state-->'`, opts.state ?? '{}')
-        .replace(`<!--app-ssr-style-->`, opts.css ?? '' + opts.links ?? '')
+        .replace(`<!--app-ssr-style-->`, opts.css ?? '' + opts.links)
 }
 
 const isProd = process.env.NODE_ENV === 'production'

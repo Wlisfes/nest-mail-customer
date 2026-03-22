@@ -1,6 +1,7 @@
+import { ref } from 'vue'
 import { Request } from 'express'
-import { ref, getCurrentInstance } from 'vue'
 import Cookies, { CookieSetOptions } from 'universal-cookie'
+export const ctx = ref<Request>({} as Request)
 
 export enum AUTH {
     /**主题存储**/
@@ -14,8 +15,8 @@ export enum AUTH {
 }
 
 export function useCoutext(options: CookieSetOptions = { path: '/', maxAge: 30 * 24 * 60 * 60 }) {
-    const ctx = ref<Request>(getCurrentInstance()?.appContext.config.globalProperties.$ctx ?? {})
     const cookies = new Cookies(ctx.value.headers?.cookie, options)
+    console.log(`cookies:`, cookies)
 
     return { ctx, cookies, AUTH }
 }

@@ -57,5 +57,29 @@ export default defineComponent({
     @media (max-width: 420px) {
         --n-padding-left: 24px;
     }
+    .n-input {
+        --n-padding-left: 0;
+        --n-padding-right: 0;
+        --input-password-right: 14px;
+        .n-input__prefix {
+            position: absolute;
+            z-index: 1;
+            height: 100%;
+            margin: 0;
+            left: 14px;
+        }
+        .n-input__suffix {
+            position: absolute;
+            z-index: 1;
+            height: 100%;
+            margin: 0;
+            right: 14px;
+        }
+        .n-input__placeholder,
+        .n-input__input-el {
+            padding-right: var(--input-password-right);
+            padding-left: 46px;
+        }
+    }
 }
 </style>

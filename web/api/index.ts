@@ -1,1 +1,5 @@
 export * from '@/api/modules/web-user.service'
+export * from '@/api/modules/web-mail-account.service'
+export * from '@/api/modules/web-mail-message.service'
+export * from '@/api/modules/web-mail-draft.service'
+export * from '@/api/modules/web-mail-blacklist.service'

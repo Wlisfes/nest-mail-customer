@@ -10,7 +10,11 @@ import * as env from '@server/modules/database/database.interface'
 export class DatabaseService extends Logger {
     constructor(
         private readonly dataSource: DataSource,
-        @InjectRepository(schema.SchemaUser) public readonly schemaUser: Repository<schema.SchemaUser>
+        @InjectRepository(schema.SchemaUser) public readonly schemaUser: Repository<schema.SchemaUser>,
+        @InjectRepository(schema.SchemaMailAccount) public readonly schemaMailAccount: Repository<schema.SchemaMailAccount>,
+        @InjectRepository(schema.SchemaMailMessage) public readonly schemaMailMessage: Repository<schema.SchemaMailMessage>,
+        @InjectRepository(schema.SchemaMailDraft) public readonly schemaMailDraft: Repository<schema.SchemaMailDraft>,
+        @InjectRepository(schema.SchemaMailBlacklist) public readonly schemaMailBlacklist: Repository<schema.SchemaMailBlacklist>
     ) {
         super()
     }

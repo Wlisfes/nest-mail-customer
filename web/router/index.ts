@@ -10,13 +10,49 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
         routes: [
             {
                 path: '/',
+                redirect: '/manager',
                 name: Layout.name,
                 component: Layout,
                 children: [
                     {
                         path: '/manager',
                         meta: { AUTH: 'AUTH' },
-                        component: () => import('@/views/manager/index.vue')
+                        component: () => import('@/views/manager/pages/manager-dashboard.vue')
+                    },
+                    {
+                        path: '/manager/inbox',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-inbox.vue')
+                    },
+                    {
+                        path: '/manager/sent',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-sent.vue')
+                    },
+                    {
+                        path: '/manager/drafts',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-drafts.vue')
+                    },
+                    {
+                        path: '/manager/compose',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-compose.vue')
+                    },
+                    {
+                        path: '/manager/accounts',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-accounts.vue')
+                    },
+                    {
+                        path: '/manager/blacklist',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-blacklist.vue')
+                    },
+                    {
+                        path: '/manager/settings',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-settings.vue')
                     },
                     {
                         path: '/:pathMatch(.*)*',

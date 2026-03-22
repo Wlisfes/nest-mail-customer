@@ -32,6 +32,7 @@ export class UserController {
     }
 
     @ApiServiceDecorator(Post('/resolver'), {
+        authorize: true,
         operation: { summary: '用户信息' },
         response: { status: 200, description: 'OK' }
     })

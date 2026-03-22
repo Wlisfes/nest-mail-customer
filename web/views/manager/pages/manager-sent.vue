@@ -1,6 +1,7 @@
 <script lang="tsx">
-import { defineComponent, h, onMounted, watch } from 'vue'
-import { httpFetchMailList } from '@/api'
+import { defineComponent, h, onMounted, ref, watch } from 'vue'
+import { httpFetchMailList, httpSyncAllMailAccounts } from '@/api'
+import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import type { DataTableColumns } from 'naive-ui'
@@ -29,6 +30,20 @@ export default defineComponent({
             }
         }
 
+        const syncing = ref(false)
+        async function handleSync() {
+            syncing.value = true
+            try {
+                await httpSyncAllMailAccounts()
+                $message.success('同步任务已启动，请稍后刷新')
+                setTimeout(() => fetchList(), 5000)
+            } catch (err: any) {
+                $message.error(err.message || '同步失败')
+            } finally {
+                syncing.value = false
+            }
+        }
+
         onMounted(() => fetchList())
         watch(() => state.page, () => fetchList())
 
@@ -52,7 +67,15 @@ export default defineComponent({
 
         return () => (
             <n-element class="flex flex-col flex-1 overflow-hidden p-24 gap-16">
-                <n-text class="text-20" style={{ fontWeight: 700 }}>已发送</n-text>
+                <div class="flex items-center justify-between">
+                    <n-text class="text-20" style={{ fontWeight: 700 }}>已发送</n-text>
+                    <div class="flex gap-8">
+                        <n-button size="small" type="primary" secondary loading={syncing.value} onClick={handleSync}>
+                            {syncing.value ? '同步中...' : '同步邮件'}
+                        </n-button>
+                        <n-button size="small" secondary onClick={() => fetchList()}>刷新</n-button>
+                    </div>
+                </div>
                 <n-data-table
                     columns={columns}
                     data={state.list}

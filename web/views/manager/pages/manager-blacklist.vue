@@ -4,7 +4,7 @@ import { httpFetchBlacklist, httpAddBlacklist, httpRemoveBlacklist } from '@/api
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
-import type { DataTableColumns } from 'naive-ui'
+import { NButton, NText, type DataTableColumns } from 'naive-ui'
 
 export default defineComponent({
     name: 'ManagerBlacklist',
@@ -63,7 +63,7 @@ export default defineComponent({
             {
                 title: '拉黑原因',
                 key: 'reason',
-                render: (row: any) => h('n-text', { depth: row.reason ? 1 : 3 }, () => row.reason || '未填写')
+                render: (row: any) => h(NText, { depth: row.reason ? 1 : 3 }, () => row.reason || '未填写')
             },
             {
                 title: '添加时间',
@@ -75,7 +75,7 @@ export default defineComponent({
                 title: '操作',
                 key: 'actions',
                 width: 80,
-                render: (row: any) => h('n-button', {
+                render: (row: any) => h(NButton, {
                     size: 'small', type: 'error', text: true, focusable: false,
                     onClick: () => handleRemove(row.keyId)
                 }, () => '移除')

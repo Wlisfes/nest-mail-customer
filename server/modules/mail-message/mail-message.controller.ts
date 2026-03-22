@@ -8,6 +8,7 @@ export class MailMessageController {
     constructor(private readonly mailMessageService: MailMessageService) {}
 
     @ApiServiceDecorator(Post('/list'), {
+        authorize: true,
         operation: { summary: '邮件列表' },
         response: { status: 200, description: 'OK' }
     })
@@ -16,6 +17,7 @@ export class MailMessageController {
     }
 
     @ApiServiceDecorator(Post('/send'), {
+        authorize: true,
         operation: { summary: '发送邮件' },
         response: { status: 200, description: 'OK' }
     })
@@ -24,6 +26,7 @@ export class MailMessageController {
     }
 
     @ApiServiceDecorator(Post('/seen'), {
+        authorize: true,
         operation: { summary: '标记已读' },
         response: { status: 200, description: 'OK' }
     })

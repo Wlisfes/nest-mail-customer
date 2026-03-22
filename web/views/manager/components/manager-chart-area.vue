@@ -10,9 +10,9 @@ import {
     GridComponent,
     LegendComponent
 } from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+import { SVGRenderer } from 'echarts/renderers'
 
-echarts.use([LineChart, PieChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent, CanvasRenderer])
+echarts.use([LineChart, PieChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent, SVGRenderer])
 
 export default defineComponent({
     name: 'ManagerChartArea',
@@ -39,7 +39,7 @@ export default defineComponent({
 
         function initLineChart() {
             if (!lineRef.value) return
-            lineChart.value = echarts.init(lineRef.value)
+            lineChart.value = echarts.init(lineRef.value, undefined, { renderer: 'svg' })
             lineChart.value.setOption({
                 tooltip: { trigger: 'axis' },
                 legend: {
@@ -92,7 +92,7 @@ export default defineComponent({
 
         function initPieChart() {
             if (!pieRef.value) return
-            pieChart.value = echarts.init(pieRef.value)
+            pieChart.value = echarts.init(pieRef.value, undefined, { renderer: 'svg' })
             pieChart.value.setOption({
                 tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
                 legend: {

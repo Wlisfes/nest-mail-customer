@@ -4,7 +4,7 @@ import { httpFetchDrafts, httpDeleteDraft } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
-import type { DataTableColumns } from 'naive-ui'
+import { NButton, type DataTableColumns } from 'naive-ui'
 
 export default defineComponent({
     name: 'ManagerDrafts',
@@ -53,8 +53,8 @@ export default defineComponent({
                 key: 'actions',
                 width: 140,
                 render: (row: any) => h('div', { class: 'flex gap-8' }, [
-                    h('n-button', { size: 'small', type: 'primary', text: true, focusable: false }, () => '编辑'),
-                    h('n-button', {
+                    h(NButton, { size: 'small', type: 'primary', text: true, focusable: false }, () => '编辑'),
+                    h(NButton, {
                         size: 'small', type: 'error', text: true, focusable: false,
                         onClick: () => handleDelete(row.keyId)
                     }, () => '删除')

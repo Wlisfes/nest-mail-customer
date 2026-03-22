@@ -8,6 +8,7 @@ export class MailDraftController {
     constructor(private readonly mailDraftService: MailDraftService) {}
 
     @ApiServiceDecorator(Post('/save'), {
+        authorize: true,
         operation: { summary: '保存草稿' },
         response: { status: 200, description: 'OK' }
     })
@@ -16,6 +17,7 @@ export class MailDraftController {
     }
 
     @ApiServiceDecorator(Post('/list'), {
+        authorize: true,
         operation: { summary: '获取草稿列表' },
         response: { status: 200, description: 'OK' }
     })
@@ -24,6 +26,7 @@ export class MailDraftController {
     }
 
     @ApiServiceDecorator(Post('/delete'), {
+        authorize: true,
         operation: { summary: '删除草稿' },
         response: { status: 200, description: 'OK' }
     })

@@ -8,6 +8,7 @@ export class DashboardController {
     constructor(private readonly dashboardService: DashboardService) {}
 
     @ApiServiceDecorator(Post('/stats'), {
+        authorize: true,
         operation: { summary: '统计卡片数据' },
         response: { status: 200, description: 'OK' }
     })
@@ -16,6 +17,7 @@ export class DashboardController {
     }
 
     @ApiServiceDecorator(Post('/trend'), {
+        authorize: true,
         operation: { summary: '7天趋势数据' },
         response: { status: 200, description: 'OK' }
     })
@@ -24,6 +26,7 @@ export class DashboardController {
     }
 
     @ApiServiceDecorator(Post('/distribution'), {
+        authorize: true,
         operation: { summary: '邮箱分布数据' },
         response: { status: 200, description: 'OK' }
     })

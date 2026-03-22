@@ -45,4 +45,22 @@ export class MailAccountController {
     public async httpDeleteMailAccount(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
         return await this.mailAccountService.httpDeleteMailAccount(request, body.keyId)
     }
+
+    @ApiServiceDecorator(Post('/sync'), {
+        authorize: true,
+        operation: { summary: '同步邮箱邮件' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpSyncMailAccount(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
+        return await this.mailAccountService.httpSyncMailAccount(request, body.keyId)
+    }
+
+    @ApiServiceDecorator(Post('/sync-all'), {
+        authorize: true,
+        operation: { summary: '同步所有邮箱邮件' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpSyncAllMailAccounts(@Request() request: dto.OmixRequest) {
+        return await this.mailAccountService.httpSyncAllMailAccounts(request)
+    }
 }

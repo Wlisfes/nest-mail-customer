@@ -1,6 +1,6 @@
 <script lang="tsx">
-import { defineComponent, h, onMounted, watch } from 'vue'
-import { httpFetchMailList, httpMarkMailSeen } from '@/api'
+import { defineComponent, h, onMounted, ref, watch } from 'vue'
+import { httpFetchMailList, httpMarkMailSeen, httpSyncAllMailAccounts } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
@@ -39,6 +39,20 @@ export default defineComponent({
                 await fetchList()
             } catch (err) {
                 console.error('标记失败', err)
+            }
+        }
+
+        const syncing = ref(false)
+        async function handleSync() {
+            syncing.value = true
+            try {
+                await httpSyncAllMailAccounts()
+                $message.success('同步任务已启动，请稍后刷新')
+                setTimeout(() => fetchList(), 5000)
+            } catch (err: any) {
+                $message.error(err.message || '同步失败')
+            } finally {
+                syncing.value = false
             }
         }
 
@@ -86,6 +100,9 @@ export default defineComponent({
                 <div class="flex items-center justify-between">
                     <n-text class="text-20" style={{ fontWeight: 700 }}>收件箱</n-text>
                     <div class="flex gap-8">
+                        <n-button size="small" type="primary" secondary loading={syncing.value} onClick={handleSync}>
+                            {syncing.value ? '同步中...' : '同步邮件'}
+                        </n-button>
                         <n-button size="small" secondary onClick={handleMarkAllSeen}>全部标记已读</n-button>
                         <n-button size="small" secondary onClick={() => fetchList()}>刷新</n-button>
                     </div>

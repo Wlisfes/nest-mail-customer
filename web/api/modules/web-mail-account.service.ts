@@ -34,3 +34,20 @@ export function httpDeleteMailAccount(keyId: number) {
         data: { keyId }
     })
 }
+
+/**同步邮箱邮件**/
+export function httpSyncMailAccount(keyId: number) {
+    return request({
+        url: `/api/mail-account/sync`,
+        method: 'POST',
+        data: { keyId }
+    })
+}
+
+/**同步所有邮箱邮件**/
+export function httpSyncAllMailAccounts() {
+    return request({
+        url: `/api/mail-account/sync-all`,
+        method: 'POST'
+    })
+}

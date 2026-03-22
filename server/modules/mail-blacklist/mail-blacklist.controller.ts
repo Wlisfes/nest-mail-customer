@@ -8,6 +8,7 @@ export class MailBlacklistController {
     constructor(private readonly mailBlacklistService: MailBlacklistService) {}
 
     @ApiServiceDecorator(Post('/add'), {
+        authorize: true,
         operation: { summary: '添加黑名单' },
         response: { status: 200, description: 'OK' }
     })
@@ -16,6 +17,7 @@ export class MailBlacklistController {
     }
 
     @ApiServiceDecorator(Post('/list'), {
+        authorize: true,
         operation: { summary: '获取黑名单列表' },
         response: { status: 200, description: 'OK' }
     })
@@ -24,6 +26,7 @@ export class MailBlacklistController {
     }
 
     @ApiServiceDecorator(Post('/delete'), {
+        authorize: true,
         operation: { summary: '移除黑名单' },
         response: { status: 200, description: 'OK' }
     })

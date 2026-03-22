@@ -10,12 +10,12 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
         routes: [
             {
                 path: '/',
-                redirect: '/manager',
+                redirect: '/manager/dashboard',
                 name: Layout.name,
                 component: Layout,
                 children: [
                     {
-                        path: '/manager',
+                        path: '/manager/dashboard',
                         meta: { AUTH: 'AUTH' },
                         component: () => import('@/views/manager/pages/manager-dashboard.vue')
                     },

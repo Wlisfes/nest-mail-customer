@@ -4,7 +4,27 @@ import { httpFetchMailList, httpSyncAllMailAccounts } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
-import type { DataTableColumns } from 'naive-ui'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+import { NTag, type DataTableColumns } from 'naive-ui'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
+
+const avatarGradients = [
+    'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    'linear-gradient(135deg, #10b981, #34d399)',
+    'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    'linear-gradient(135deg, #ef4444, #f87171)',
+    'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    'linear-gradient(135deg, #06b6d4, #22d3ee)'
+]
+
+function hashColor(str: string) {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    return avatarGradients[Math.abs(hash) % avatarGradients.length]
+}
 
 export default defineComponent({
     name: 'ManagerSent',
@@ -16,6 +36,7 @@ export default defineComponent({
             total: 0,
             list: [] as any[]
         })
+        const syncing = ref(false)
 
         async function fetchList() {
             await setState({ loading: true })
@@ -30,7 +51,6 @@ export default defineComponent({
             }
         }
 
-        const syncing = ref(false)
         async function handleSync() {
             syncing.value = true
             try {
@@ -48,44 +68,71 @@ export default defineComponent({
         watch(() => state.page, () => fetchList())
 
         const columns: DataTableColumns = [
-            { title: '收件人', key: 'toAddress', width: 200, ellipsis: { tooltip: true } },
+            {
+                title: '收件人',
+                key: 'toAddress',
+                width: 220,
+                render: (row: any) => {
+                    const addr = row.toAddress ?? ''
+                    const name = addr.split('@')[0] ?? '?'
+                    return h('div', { class: 'flex items-center gap-10' }, [
+                        h('div', {
+                            class: 'mail-sender-avatar',
+                            style: { background: hashColor(addr) }
+                        }, name.charAt(0).toUpperCase()),
+                        h('div', { class: 'flex flex-col' }, [
+                            h('span', { style: { fontSize: '13px', fontWeight: 500 } }, name),
+                            h('span', { style: { fontSize: '11px', opacity: 0.5 } }, addr)
+                        ])
+                    ])
+                }
+            },
             { title: '主题', key: 'subject', ellipsis: { tooltip: true } },
             {
                 title: '附件',
                 key: 'hasAttachment',
                 width: 60,
                 align: 'center',
-                render: (row: any) => row.hasAttachment ? h('span', null, '📎') : null
+                render: (row: any) => row.hasAttachment ? h(NTag, { size: 'small', bordered: false, round: true }, () => '📎') : null
             },
             {
                 title: '时间',
                 key: 'date',
-                width: 160,
-                render: (row: any) => row.date ? dayjs(row.date).format('YYYY-MM-DD HH:mm') : ''
+                width: 140,
+                render: (row: any) => row.date ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.date).fromNow()) : ''
             }
         ]
 
         return () => (
-            <n-element class="flex flex-col flex-1 overflow-hidden p-24 gap-16">
-                <div class="flex items-center justify-between">
-                    <n-text class="text-20" style={{ fontWeight: 700 }}>已发送</n-text>
+            <n-element class="page-container animate-fadeInUp">
+                <div class="page-header">
+                    <div class="flex items-center gap-12">
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>📤 已发送</n-text>
+                        {state.total > 0 && (
+                            <n-tag size="small" round bordered={false} type="success">
+                                {state.total} 封
+                            </n-tag>
+                        )}
+                    </div>
                     <div class="flex gap-8">
-                        <n-button size="small" type="primary" secondary loading={syncing.value} onClick={handleSync}>
-                            {syncing.value ? '同步中...' : '同步邮件'}
+                        <n-button size="small" type="primary" secondary round loading={syncing.value} onClick={handleSync}>
+                            {syncing.value ? '同步中...' : '🔄 同步'}
                         </n-button>
-                        <n-button size="small" secondary onClick={() => fetchList()}>刷新</n-button>
+                        <n-button size="small" secondary round onClick={() => fetchList()}>🔃 刷新</n-button>
                     </div>
                 </div>
-                <n-data-table
-                    columns={columns}
-                    data={state.list}
-                    row-key={(row: any) => row.keyId}
-                    bordered={false}
-                    striped
-                    flex-height
-                    class="flex-1"
-                    loading={state.loading}
-                />
+                <div class="mail-table-wrap flex-1 overflow-hidden">
+                    <n-data-table
+                        columns={columns}
+                        data={state.list}
+                        row-key={(row: any) => row.keyId}
+                        bordered={false}
+                        striped
+                        flex-height
+                        class="flex-1"
+                        loading={state.loading}
+                    />
+                </div>
                 <div class="flex justify-end">
                     <n-pagination
                         v-model:page={state.page}
@@ -98,3 +145,7 @@ export default defineComponent({
     }
 })
 </script>
+
+<style lang="scss" scoped>
+@import '../manager.scss';
+</style>

@@ -3,12 +3,19 @@ import { defineComponent, h, onMounted } from 'vue'
 import { httpFetchDrafts, httpDeleteDraft } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
+import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
 import { NButton, type DataTableColumns } from 'naive-ui'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
 
 export default defineComponent({
     name: 'ManagerDrafts',
     setup() {
+        const router = useRouter()
         const { state, setState } = useState({
             loading: false,
             list: [] as any[]
@@ -20,67 +27,102 @@ export default defineComponent({
                 const res: any = await httpFetchDrafts()
                 const data = res.data ?? res
                 await setState({ list: Array.isArray(data) ? data : (data.list ?? []) })
-            } catch (err) {
-                console.error('获取草稿列表失败', err)
-            } finally {
-                await setState({ loading: false })
-            }
+            } catch (err) { console.error(err) }
+            finally { await setState({ loading: false }) }
         }
 
         async function handleDelete(keyId: number) {
             try {
                 await httpDeleteDraft(keyId)
-                $message.success('删除成功')
+                $message.success('草稿已删除')
                 await fetchList()
-            } catch (err) {
-                console.error('删除草稿失败', err)
-            }
+            } catch (err) { console.error(err) }
         }
 
-        onMounted(() => fetchList())
+        onMounted(fetchList)
 
         const columns: DataTableColumns = [
-            { title: '收件人', key: 'toAddress', width: 200, ellipsis: { tooltip: true } },
-            { title: '主题', key: 'subject', ellipsis: { tooltip: true } },
+            {
+                title: '收件人',
+                key: 'toAddress',
+                width: 200,
+                render: (row: any) => {
+                    const addr = row.toAddress ?? '未指定'
+                    return h('div', { class: 'flex items-center gap-10' }, [
+                        h('div', {
+                            class: 'mail-sender-avatar',
+                            style: { background: 'linear-gradient(135deg, #f59e0b, #fbbf24)' }
+                        }, addr.charAt(0).toUpperCase()),
+                        h('span', { style: { fontWeight: 500 } }, addr)
+                    ])
+                }
+            },
+            {
+                title: '主题',
+                key: 'subject',
+                ellipsis: { tooltip: true },
+                render: (row: any) => row.subject || '(无主题)'
+            },
             {
                 title: '保存时间',
                 key: 'createTime',
-                width: 160,
-                render: (row: any) => row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm') : ''
+                width: 140,
+                render: (row: any) => row.createTime ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.createTime).fromNow()) : ''
             },
             {
                 title: '操作',
                 key: 'actions',
                 width: 140,
-                render: (row: any) => h('div', { class: 'flex gap-8' }, [
-                    h(NButton, { size: 'small', type: 'primary', text: true, focusable: false }, () => '编辑'),
+                render: (row: any) => h('div', { class: 'flex gap-6' }, [
                     h(NButton, {
-                        size: 'small', type: 'error', text: true, focusable: false,
+                        size: 'small', type: 'info', secondary: true, round: true,
+                        onClick: () => router.push('/manager/compose')
+                    }, () => '✏️ 编辑'),
+                    h(NButton, {
+                        size: 'small', type: 'error', secondary: true, round: true,
                         onClick: () => handleDelete(row.keyId)
-                    }, () => '删除')
+                    }, () => '🗑️')
                 ])
             }
         ]
 
         return () => (
-            <n-element class="flex flex-col flex-1 overflow-hidden p-24 gap-16">
-                <n-text class="text-20" style={{ fontWeight: 700 }}>草稿箱</n-text>
+            <n-element class="page-container animate-fadeInUp">
+                <div class="page-header">
+                    <div class="flex items-center gap-12">
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>📝 草稿箱</n-text>
+                        <n-tag size="small" round bordered={false} type="warning">
+                            {state.list.length} 封
+                        </n-tag>
+                    </div>
+                    <n-button type="primary" round onClick={() => router.push('/manager/compose')} style={{ fontWeight: 600 }}>
+                        ✏️ 写邮件
+                    </n-button>
+                </div>
                 {state.list.length === 0 && !state.loading ? (
-                    <n-empty description="暂无草稿" class="flex-1 justify-center" />
+                    <div class="flex flex-col items-center justify-center flex-1 gap-12">
+                        <span style={{ fontSize: '56px', opacity: 0.4 }}>📄</span>
+                        <n-text depth={3}>暂无草稿</n-text>
+                    </div>
                 ) : (
-                    <n-data-table
-                        columns={columns}
-                        data={state.list}
-                        row-key={(row: any) => row.keyId}
-                        bordered={false}
-                        striped
-                        flex-height
-                        class="flex-1"
-                        loading={state.loading}
-                    />
+                    <div class="mail-table-wrap flex-1 overflow-hidden">
+                        <n-data-table
+                            columns={columns}
+                            data={state.list}
+                            row-key={(row: any) => row.keyId}
+                            bordered={false}
+                            striped
+                            flex-height
+                            loading={state.loading}
+                        />
+                    </div>
                 )}
             </n-element>
         )
     }
 })
 </script>
+
+<style lang="scss" scoped>
+@import '../manager.scss';
+</style>

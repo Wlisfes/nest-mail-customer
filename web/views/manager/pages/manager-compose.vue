@@ -11,6 +11,7 @@ export default defineComponent({
         const router = useRouter()
         const { state, setState } = useState({
             loading: false,
+            saving: false,
             accountId: null as number | null,
             to: '',
             subject: '',
@@ -47,7 +48,7 @@ export default defineComponent({
                     subject: state.subject,
                     html: state.html
                 })
-                $message.success('发送成功')
+                $message.success('🎉 发送成功')
                 router.push('/manager/sent')
             } catch (err) {
                 $message.error('发送失败')
@@ -57,22 +58,37 @@ export default defineComponent({
         }
 
         async function handleSaveDraft() {
+            await setState({ saving: true })
             try {
                 await httpSaveDraft({
                     toAddress: state.to,
                     subject: state.subject,
                     content: state.html
                 })
-                $message.success('草稿已保存')
+                $message.success('📝 草稿已保存')
             } catch (err) {
                 $message.error('保存失败')
+            } finally {
+                await setState({ saving: false })
             }
         }
 
         return () => (
-            <n-element class="flex flex-col flex-1 overflow-hidden p-24 gap-16">
-                <n-text class="text-20" style={{ fontWeight: 700 }}>写邮件</n-text>
-                <n-card content-class="p-20!">
+            <n-element class="page-container animate-fadeInUp">
+                <div class="page-header">
+                    <div class="flex items-center gap-8">
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>✏️ 写邮件</n-text>
+                    </div>
+                    <div class="flex gap-8">
+                        <n-button secondary round loading={state.saving} onClick={handleSaveDraft}>
+                            📝 存为草稿
+                        </n-button>
+                        <n-button type="primary" round loading={state.loading} onClick={handleSend} style={{ fontWeight: 600 }}>
+                            🚀 发送邮件
+                        </n-button>
+                    </div>
+                </div>
+                <n-card content-class="p-24!" style={{ borderRadius: '16px' }} hoverable>
                     <n-form label-placement="left" label-width={80}>
                         <n-form-item label="发件邮箱">
                             <n-select
@@ -98,24 +114,10 @@ export default defineComponent({
                                 type="textarea"
                                 v-model:value={state.html}
                                 placeholder="请输入邮件正文..."
-                                rows={12}
+                                rows={14}
+                                style={{ borderRadius: '10px' }}
                             />
                         </n-form-item>
-                        <div class="flex gap-12 justify-end">
-                            <n-button
-                                secondary
-                                onClick={handleSaveDraft}
-                            >
-                                存为草稿
-                            </n-button>
-                            <n-button
-                                type="primary"
-                                loading={state.loading}
-                                onClick={handleSend}
-                            >
-                                发送邮件
-                            </n-button>
-                        </div>
                     </n-form>
                 </n-card>
             </n-element>
@@ -123,3 +125,7 @@ export default defineComponent({
     }
 })
 </script>
+
+<style lang="scss" scoped>
+@import '../manager.scss';
+</style>

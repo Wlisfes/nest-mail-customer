@@ -1,132 +1,107 @@
 <script lang="tsx">
-import { defineComponent, h, ref, onMounted } from 'vue'
-import { httpFetchBlacklist, httpAddBlacklist, httpRemoveBlacklist } from '@/api'
+import { defineComponent, h, onMounted } from 'vue'
+import { httpFetchBlacklist, httpRemoveBlacklist } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
-import { NButton, NText, type DataTableColumns } from 'naive-ui'
+import { NButton, NText, NTag, type DataTableColumns } from 'naive-ui'
 
 export default defineComponent({
     name: 'ManagerBlacklist',
     setup() {
-        const showModal = ref(false)
-
         const { state, setState } = useState({
-            list: [] as any[],
-            form: {
-                email: '',
-                reason: ''
-            }
+            loading: false,
+            list: [] as any[]
         })
 
         async function fetchList() {
+            await setState({ loading: true })
             try {
                 const res: any = await httpFetchBlacklist()
                 const data = res.data ?? res
                 await setState({ list: Array.isArray(data) ? data : (data.list ?? []) })
-            } catch (err) {
-                console.error('获取黑名单失败', err)
-            }
-        }
-
-        async function handleAdd() {
-            if (!state.form.email) {
-                $message.warning('请输入邮箱地址')
-                return false
-            }
-            try {
-                await httpAddBlacklist({ email: state.form.email, reason: state.form.reason })
-                showModal.value = false
-                $message.success('已添加至黑名单')
-                await setState({ form: { email: '', reason: '' } })
-                await fetchList()
-            } catch (err: any) {
-                $message.error(err.message || '添加失败')
-                return false
-            }
+            } catch (err) { console.error(err) }
+            finally { await setState({ loading: false }) }
         }
 
         async function handleRemove(keyId: number) {
             try {
                 await httpRemoveBlacklist(keyId)
-                $message.success('已移除')
+                $message.success('已从黑名单移除')
                 await fetchList()
-            } catch (err) {
-                console.error('移除失败', err)
-            }
+            } catch (err) { console.error(err) }
         }
 
-        onMounted(() => fetchList())
+        onMounted(fetchList)
 
         const columns: DataTableColumns = [
-            { title: '邮箱地址', key: 'email', ellipsis: { tooltip: true } },
             {
-                title: '拉黑原因',
+                title: '邮箱地址',
+                key: 'email',
+                render: (row: any) => h('div', { class: 'flex items-center gap-10' }, [
+                    h('div', {
+                        class: 'mail-sender-avatar',
+                        style: { background: 'linear-gradient(135deg, #ef4444, #f87171)' }
+                    }, (row.email ?? '?').charAt(0).toUpperCase()),
+                    h(NText, { style: { fontWeight: 500 } }, () => row.email)
+                ])
+            },
+            {
+                title: '原因',
                 key: 'reason',
-                render: (row: any) => h(NText, { depth: row.reason ? 1 : 3 }, () => row.reason || '未填写')
+                render: (row: any) => h(NTag, { size: 'small', bordered: false, round: true, type: 'error' }, () => row.reason ?? '手动添加')
             },
             {
                 title: '添加时间',
                 key: 'createTime',
-                width: 120,
-                render: (row: any) => row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD') : ''
+                width: 140,
+                render: (row: any) => row.createTime ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.createTime).format('YYYY-MM-DD')) : ''
             },
             {
                 title: '操作',
                 key: 'actions',
-                width: 80,
+                width: 100,
                 render: (row: any) => h(NButton, {
-                    size: 'small', type: 'error', text: true, focusable: false,
+                    size: 'small', type: 'warning', secondary: true, round: true,
                     onClick: () => handleRemove(row.keyId)
                 }, () => '移除')
             }
         ]
 
         return () => (
-            <n-element class="flex flex-col flex-1 overflow-hidden p-24 gap-16">
-                <div class="flex items-center justify-between">
-                    <n-text class="text-20" style={{ fontWeight: 700 }}>黑名单管理</n-text>
-                    <n-button type="primary" onClick={() => (showModal.value = true)}>
-                        添加黑名单
-                    </n-button>
+            <n-element class="page-container animate-fadeInUp">
+                <div class="page-header">
+                    <div class="flex items-center gap-12">
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>🚫 黑名单</n-text>
+                        <n-tag size="small" round bordered={false} type="error">
+                            {state.list.length} 条
+                        </n-tag>
+                    </div>
                 </div>
-                {state.list.length === 0 ? (
-                    <n-empty description="暂无黑名单" class="flex-1 justify-center" />
+                {state.list.length === 0 && !state.loading ? (
+                    <div class="flex flex-col items-center justify-center flex-1 gap-12">
+                        <span style={{ fontSize: '56px', opacity: 0.4 }}>✅</span>
+                        <n-text depth={3} class="text-14">黑名单为空，一切正常</n-text>
+                    </div>
                 ) : (
-                    <n-data-table
-                        columns={columns}
-                        data={state.list}
-                        row-key={(row: any) => row.keyId}
-                        bordered={false}
-                        striped
-                    />
+                    <div class="mail-table-wrap flex-1 overflow-hidden">
+                        <n-data-table
+                            columns={columns}
+                            data={state.list}
+                            row-key={(row: any) => row.keyId}
+                            bordered={false}
+                            striped
+                            flex-height
+                            loading={state.loading}
+                        />
+                    </div>
                 )}
-
-                <n-modal
-                    v-model:show={showModal.value}
-                    preset="dialog"
-                    title="添加黑名单"
-                    positive-text="确认"
-                    negative-text="取消"
-                    onPositiveClick={handleAdd}
-                >
-                    <n-form label-placement="left" label-width={80} class="m-bs-16">
-                        <n-form-item label="邮箱地址">
-                            <n-input
-                                v-model:value={state.form.email}
-                                placeholder="请输入要拉黑的邮箱地址"
-                            />
-                        </n-form-item>
-                        <n-form-item label="原因">
-                            <n-input
-                                v-model:value={state.form.reason}
-                                placeholder="可选填拉黑原因"
-                            />
-                        </n-form-item>
-                    </n-form>
-                </n-modal>
             </n-element>
         )
     }
 })
 </script>
+
+<style lang="scss" scoped>
+@import '../manager.scss';
+</style>

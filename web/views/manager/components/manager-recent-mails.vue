@@ -3,11 +3,23 @@ import { defineComponent, onMounted } from 'vue'
 import { httpFetchMailList } from '@/api'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
 
 export default defineComponent({
     name: 'ManagerRecentMails',
     setup() {
-        const colors = ['#536dfe', '#18a058', '#f0a020', '#d03050', '#7c3aed']
+        const gradients = [
+            'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            'linear-gradient(135deg, #10b981, #34d399)',
+            'linear-gradient(135deg, #f59e0b, #fbbf24)',
+            'linear-gradient(135deg, #ef4444, #f87171)',
+            'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+            'linear-gradient(135deg, #06b6d4, #22d3ee)'
+        ]
 
         const { state, setState } = useState({
             mails: [] as Array<{
@@ -16,8 +28,9 @@ export default defineComponent({
                 email: string
                 subject: string
                 time: string
+                relativeTime: string
                 unread: boolean
-                color: string
+                gradient: string
             }>
         })
 
@@ -33,8 +46,9 @@ export default defineComponent({
                         email: item.fromAddress,
                         subject: item.subject ?? '(无主题)',
                         time: item.date ? dayjs(item.date).format('MM/DD HH:mm') : '',
+                        relativeTime: item.date ? dayjs(item.date).fromNow() : '',
                         unread: !item.seen,
-                        color: colors[i % colors.length]
+                        gradient: gradients[i % gradients.length]
                     }))
                 })
             } catch (err) {
@@ -43,32 +57,38 @@ export default defineComponent({
         })
 
         return () => (
-            <n-card hoverable content-class="p-16!">
+            <n-card hoverable content-class="p-20!" class="animate-fadeInUp animate-stagger-4" style={{ borderRadius: '16px' }}>
                 <div class="flex items-center justify-between m-be-8">
-                    <n-text class="text-16" style={{ fontWeight: 600 }}>最近邮件</n-text>
-                    <n-button text type="primary" focusable={false} size="small">
-                        查看全部
+                    <n-text class="text-16" style={{ fontWeight: 700 }}>最近邮件</n-text>
+                    <n-button text type="primary" focusable={false} size="small" style={{ fontWeight: 600 }}>
+                        查看全部 →
                     </n-button>
                 </div>
                 <div class="flex flex-col">
-                    {state.mails.map(mail => (
-                        <div key={mail.id} class="manager-recent-mail-item flex items-center gap-12">
-                            <div
-                                class="mail-avatar"
-                                style={{ background: mail.color, color: '#fff' }}
-                            >
-                                {mail.sender.charAt(0)}
+                    {state.mails.length === 0 && (
+                        <div class="flex flex-col items-center gap-8 p-32">
+                            <span style={{ fontSize: '40px', opacity: 0.5 }}>📭</span>
+                            <n-text depth={3}>暂无邮件</n-text>
+                        </div>
+                    )}
+                    {state.mails.map((mail, index) => (
+                        <div
+                            key={mail.id}
+                            class={['manager-recent-mail-item flex items-center gap-12 animate-slideInLeft', `animate-stagger-${index + 1}`]}
+                        >
+                            <div class="mail-avatar" style={{ background: mail.gradient }}>
+                                {mail.sender.charAt(0).toUpperCase()}
                             </div>
                             <div class="flex flex-col flex-1 overflow-hidden">
                                 <div class="flex items-center gap-8">
                                     <n-text
-                                        class="text-14 truncate"
+                                        class="text-14 truncate flex-1"
                                         style={{ fontWeight: mail.unread ? 700 : 400 }}
                                     >
                                         {mail.sender}
                                     </n-text>
-                                    <n-text depth={3} class="text-12 flex-shrink-0">
-                                        {mail.time}
+                                    <n-text depth={3} class="text-11 flex-shrink-0" style={{ opacity: 0.7 }}>
+                                        {mail.relativeTime}
                                     </n-text>
                                 </div>
                                 <n-text

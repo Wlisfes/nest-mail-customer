@@ -1,5 +1,5 @@
 <script lang="tsx">
-import { defineComponent, h, computed } from 'vue'
+import { defineComponent, h, computed, Transition } from 'vue'
 import { useRoute, useRouter, RouterView } from 'vue-router'
 import { NIcon, type MenuOption } from 'naive-ui'
 import { useMouse, useStore } from '@/store'
@@ -16,7 +16,7 @@ export default defineComponent({
         const menuOptions: MenuOption[] = [
             {
                 label: '仪表盘',
-                key: '/manager',
+                key: '/manager/dashboard',
                 icon: () => h('span', { style: { fontSize: '18px' } }, '📊')
             },
             {
@@ -74,8 +74,12 @@ export default defineComponent({
                     content-class="flex flex-col"
                 >
                     <div class="flex items-center gap-8 p-16 p-be-8">
-                        <n-text class="text-18" style={{ fontWeight: 700 }}>📧</n-text>
-                        <n-text class="text-16" style={{ fontWeight: 600 }}>Mail Server</n-text>
+                        <n-text class="text-18" style={{ fontWeight: 700 }}>
+                            📧
+                        </n-text>
+                        <n-text class="text-16" style={{ fontWeight: 600 }}>
+                            Mail Server
+                        </n-text>
                     </div>
                     <n-menu
                         value={menuValue.value}
@@ -88,7 +92,9 @@ export default defineComponent({
                 </n-layout-sider>
                 <n-layout content-class="flex flex-col overflow-hidden">
                     <n-layout-header class="w-full h-52 flex items-center justify-between p-inline-20 overflow-hidden" bordered>
-                        <n-text class="text-16" style={{ fontWeight: 600 }}>Mail Server</n-text>
+                        <n-text class="text-16" style={{ fontWeight: 600 }}>
+                            Mail Server
+                        </n-text>
                         <layout-common-deploy></layout-common-deploy>
                     </n-layout-header>
                     <n-layout-content
@@ -98,7 +104,15 @@ export default defineComponent({
                         scrollbar-props={{ size: 100, trigger: 'none' }}
                     >
                         <n-element class="flex flex-col flex-1 overflow-hidden">
-                            <RouterView>{{ default: ({ Component, route }: any) => <Component key={route.fullPath} /> }}</RouterView>
+                            <RouterView>
+                                {{
+                                    default: ({ Component, route }: any) => (
+                                        <Transition name="page-fade" mode="out-in">
+                                            <Component key={route.fullPath} />
+                                        </Transition>
+                                    )
+                                }}
+                            </RouterView>
                         </n-element>
                     </n-layout-content>
                 </n-layout>

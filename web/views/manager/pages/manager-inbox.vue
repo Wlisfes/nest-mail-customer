@@ -4,7 +4,27 @@ import { httpFetchMailList, httpMarkMailSeen, httpSyncAllMailAccounts } from '@/
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
-import type { DataTableColumns } from 'naive-ui'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+import { NButton, NTag, type DataTableColumns } from 'naive-ui'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
+
+const avatarGradients = [
+    'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    'linear-gradient(135deg, #10b981, #34d399)',
+    'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    'linear-gradient(135deg, #ef4444, #f87171)',
+    'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    'linear-gradient(135deg, #06b6d4, #22d3ee)'
+]
+
+function hashColor(str: string) {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    return avatarGradients[Math.abs(hash) % avatarGradients.length]
+}
 
 export default defineComponent({
     name: 'ManagerInbox',
@@ -16,6 +36,7 @@ export default defineComponent({
             total: 0,
             list: [] as any[]
         })
+        const syncing = ref(false)
 
         async function fetchList() {
             await setState({ loading: true })
@@ -42,7 +63,6 @@ export default defineComponent({
             }
         }
 
-        const syncing = ref(false)
         async function handleSync() {
             syncing.value = true
             try {
@@ -59,64 +79,85 @@ export default defineComponent({
         onMounted(() => fetchList())
         watch(() => state.page, () => fetchList())
 
+        const unreadCount = () => state.list.filter((m: any) => !m.seen).length
+
         const columns: DataTableColumns = [
             {
-                title: '状态',
-                key: 'seen',
-                width: 60,
-                align: 'center',
-                render: (row: any) => h('span', {
-                    style: {
-                        width: '8px', height: '8px', borderRadius: '50%', display: 'inline-block',
-                        background: row.seen ? 'transparent' : 'var(--primary-color)',
-                        border: row.seen ? '1px solid var(--text-color-3)' : 'none'
-                    }
-                })
+                title: '发件人',
+                key: 'fromAddress',
+                width: 220,
+                render: (row: any) => {
+                    const name = row.fromAddress?.split('@')[0] ?? '?'
+                    return h('div', { class: 'flex items-center gap-10' }, [
+                        h('div', {
+                            class: 'mail-sender-avatar',
+                            style: { background: hashColor(row.fromAddress ?? '') }
+                        }, name.charAt(0).toUpperCase()),
+                        h('div', { class: 'flex flex-col' }, [
+                            h('span', { style: { fontWeight: row.seen ? 400 : 700, fontSize: '13px' } }, name),
+                            h('span', { style: { fontSize: '11px', opacity: 0.5 } }, row.fromAddress)
+                        ])
+                    ])
+                }
             },
-            { title: '发件人', key: 'fromAddress', width: 200, ellipsis: { tooltip: true } },
             {
                 title: '主题',
                 key: 'subject',
                 ellipsis: { tooltip: true },
-                render: (row: any) => h('span', { style: { fontWeight: row.seen ? 400 : 700 } }, row.subject)
+                render: (row: any) => h('span', { style: { fontWeight: row.seen ? 400 : 700 } }, row.subject || '(无主题)')
             },
             {
                 title: '附件',
                 key: 'hasAttachment',
                 width: 60,
                 align: 'center',
-                render: (row: any) => row.hasAttachment ? h('span', null, '📎') : null
+                render: (row: any) => row.hasAttachment ? h(NTag, { size: 'small', bordered: false, round: true }, () => '📎') : null
             },
             {
                 title: '时间',
                 key: 'date',
-                width: 160,
-                render: (row: any) => row.date ? dayjs(row.date).format('YYYY-MM-DD HH:mm') : ''
+                width: 140,
+                render: (row: any) => row.date ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.date).fromNow()) : ''
             }
         ]
 
         return () => (
-            <n-element class="flex flex-col flex-1 overflow-hidden p-24 gap-16">
-                <div class="flex items-center justify-between">
-                    <n-text class="text-20" style={{ fontWeight: 700 }}>收件箱</n-text>
+            <n-element class="page-container animate-fadeInUp">
+                <div class="page-header">
+                    <div class="flex items-center gap-12">
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>📥 收件箱</n-text>
+                        {state.total > 0 && (
+                            <n-tag size="small" round bordered={false} type="info">
+                                {state.total} 封
+                            </n-tag>
+                        )}
+                        {unreadCount() > 0 && (
+                            <n-tag size="small" round bordered={false} type="warning">
+                                {unreadCount()} 未读
+                            </n-tag>
+                        )}
+                    </div>
                     <div class="flex gap-8">
-                        <n-button size="small" type="primary" secondary loading={syncing.value} onClick={handleSync}>
-                            {syncing.value ? '同步中...' : '同步邮件'}
+                        <n-button size="small" type="primary" secondary round loading={syncing.value} onClick={handleSync}>
+                            {syncing.value ? '同步中...' : '🔄 同步'}
                         </n-button>
-                        <n-button size="small" secondary onClick={handleMarkAllSeen}>全部标记已读</n-button>
-                        <n-button size="small" secondary onClick={() => fetchList()}>刷新</n-button>
+                        <n-button size="small" secondary round onClick={handleMarkAllSeen}>✅ 全部已读</n-button>
+                        <n-button size="small" secondary round onClick={() => fetchList()}>🔃 刷新</n-button>
                     </div>
                 </div>
-                <n-data-table
-                    columns={columns}
-                    data={state.list}
-                    row-key={(row: any) => row.keyId}
-                    bordered={false}
-                    striped
-                    flex-height
-                    class="flex-1"
-                    loading={state.loading}
-                />
+                <div class="mail-table-wrap flex-1 overflow-hidden">
+                    <n-data-table
+                        columns={columns}
+                        data={state.list}
+                        row-key={(row: any) => row.keyId}
+                        bordered={false}
+                        striped
+                        flex-height
+                        class="flex-1"
+                        loading={state.loading}
+                        row-class-name={(row: any) => row.seen ? '' : 'font-bold'}
+                    />
+                </div>
                 <div class="flex justify-end">
                     <n-pagination
                         v-model:page={state.page}
@@ -129,3 +170,7 @@ export default defineComponent({
     }
 })
 </script>
+
+<style lang="scss" scoped>
+@import '../manager.scss';
+</style>

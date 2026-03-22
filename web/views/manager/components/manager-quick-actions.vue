@@ -1,72 +1,102 @@
 <script lang="tsx">
 import { defineComponent } from 'vue'
+import { useRouter } from 'vue-router'
+import { $message } from '@/utils'
+import { httpSyncAllMailAccounts } from '@/api'
 import { useState } from '@/hooks'
 
 export default defineComponent({
     name: 'ManagerQuickActions',
     setup() {
-        const { state } = useState({
-            actions: [
-                {
-                    label: '写邮件',
-                    desc: '撰写并发送新邮件',
-                    color: 'rgba(99, 125, 255, 0.15)',
-                    textColor: '#536dfe',
-                    icon: '✉'
-                },
-                {
-                    label: '添加邮箱',
-                    desc: '绑定新的邮箱账户',
-                    color: 'rgba(24, 160, 88, 0.15)',
-                    textColor: '#18a058',
-                    icon: '＋'
-                },
-                {
-                    label: '全部同步',
-                    desc: '同步所有邮箱收件',
-                    color: 'rgba(240, 160, 32, 0.15)',
-                    textColor: '#f0a020',
-                    icon: '⟳'
-                },
-                {
-                    label: '搜索邮件',
-                    desc: '按关键词搜索邮件',
-                    color: 'rgba(208, 48, 80, 0.15)',
-                    textColor: '#d03050',
-                    icon: '⌕'
+        const router = useRouter()
+        const { state, setState } = useState({ syncing: false })
+
+        const actions = [
+            {
+                label: '写邮件',
+                desc: '撰写并发送新邮件',
+                gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                bgColor: 'rgba(99,102,241,0.1)',
+                icon: '✉️',
+                route: '/manager/compose'
+            },
+            {
+                label: '添加邮箱',
+                desc: '绑定新的邮箱账户',
+                gradient: 'linear-gradient(135deg, #10b981, #34d399)',
+                bgColor: 'rgba(16,185,129,0.1)',
+                icon: '➕',
+                route: '/manager/accounts'
+            },
+            {
+                label: '全部同步',
+                desc: '同步所有邮箱收件',
+                gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                bgColor: 'rgba(245,158,11,0.1)',
+                icon: '🔄',
+                action: 'sync'
+            },
+            {
+                label: '收件箱',
+                desc: '查看最新收件邮件',
+                gradient: 'linear-gradient(135deg, #ef4444, #f87171)',
+                bgColor: 'rgba(239,68,68,0.1)',
+                icon: '📥',
+                route: '/manager/inbox'
+            }
+        ]
+
+        async function handleClick(action: typeof actions[0]) {
+            if (action.action === 'sync') {
+                if (state.syncing) return
+                await setState({ syncing: true })
+                try {
+                    await httpSyncAllMailAccounts()
+                    $message.success('同步任务已启动')
+                } catch (err: any) {
+                    $message.error(err.message || '同步失败')
+                } finally {
+                    await setState({ syncing: false })
                 }
-            ]
-        })
+            } else if (action.route) {
+                router.push(action.route)
+            }
+        }
 
         return () => (
-            <n-card hoverable content-class="p-16!">
-                <n-text class="text-16" style={{ fontWeight: 600 }}>快捷操作</n-text>
+            <n-card hoverable content-class="p-20!" class="animate-fadeInUp animate-stagger-3" style={{ borderRadius: '16px' }}>
+                <n-text class="text-16" style={{ fontWeight: 700 }}>快捷操作</n-text>
                 <div class="manager-quick-actions m-bs-16">
-                    {state.actions.map((action, index) => (
+                    {actions.map((action, index) => (
                         <n-card
                             key={index}
-                            class="manager-action-card"
+                            class={['manager-action-card animate-fadeInUp', `animate-stagger-${index + 4}`]}
                             hoverable
-                            content-class="p-12!"
+                            content-class="p-14!"
+                            onClick={() => handleClick(action)}
                         >
                             <div class="flex items-center gap-12">
                                 <div
                                     class="action-icon-wrap"
-                                    style={{ background: action.color }}
+                                    style={{ background: action.bgColor }}
                                 >
-                                    <span style={{ color: action.textColor, fontSize: '20px' }}>
-                                        {action.icon}
-                                    </span>
+                                    <span style={{ fontSize: '20px' }}>{action.icon}</span>
                                 </div>
-                                <div class="flex flex-col">
-                                    <n-text class="text-14" style={{ fontWeight: 600 }}>
+                                <div class="flex flex-col flex-1">
+                                    <n-text class="text-14" style={{ fontWeight: 700 }}>
                                         {action.label}
                                     </n-text>
                                     <n-text depth={3} class="text-12">
                                         {action.desc}
                                     </n-text>
                                 </div>
+                                <n-text depth={3} style={{ fontSize: '16px' }}>→</n-text>
                             </div>
+                            <div style={{
+                                position: 'absolute', left: 0, top: 0, bottom: 0,
+                                width: '3px', borderRadius: '0 3px 3px 0',
+                                background: action.gradient
+                            }}></div>
                         </n-card>
                     ))}
                 </div>

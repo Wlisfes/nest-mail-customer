@@ -1,4 +1,4 @@
-import { Post, Body, Request, Get, Put, Delete, Param } from '@nestjs/common'
+import { Post, Body, Request } from '@nestjs/common'
 import { ApifoxController, ApiServiceDecorator } from '@server/decorator'
 import { MailAccountService } from '@server/modules/mail-account/mail-account.service'
 import * as dto from '@server/interface'
@@ -7,7 +7,8 @@ import * as dto from '@server/interface'
 export class MailAccountController {
     constructor(private readonly mailAccountService: MailAccountService) {}
 
-    @ApiServiceDecorator(Post('/'), {
+    @ApiServiceDecorator(Post('/create'), {
+        authorize: true,
         operation: { summary: '添加邮箱账号' },
         response: { status: 200, description: 'OK' }
     })
@@ -15,7 +16,8 @@ export class MailAccountController {
         return await this.mailAccountService.httpCreateMailAccount(request, body)
     }
 
-    @ApiServiceDecorator(Get('/list'), {
+    @ApiServiceDecorator(Post('/list'), {
+        authorize: true,
         operation: { summary: '获取邮箱账号列表' },
         response: { status: 200, description: 'OK' }
     })
@@ -23,23 +25,24 @@ export class MailAccountController {
         return await this.mailAccountService.httpFetchMailAccounts(request)
     }
 
-    @ApiServiceDecorator(Put('/:keyId'), {
+    @ApiServiceDecorator(Post('/update'), {
+        authorize: true,
         operation: { summary: '更新邮箱账号' },
         response: { status: 200, description: 'OK' }
     })
     public async httpUpdateMailAccount(
         @Request() request: dto.OmixRequest,
-        @Param('keyId') keyId: number,
-        @Body() body: dto.UpdateMailAccountOptions
+        @Body() body: dto.UpdateMailAccountOptions & { keyId: number }
     ) {
-        return await this.mailAccountService.httpUpdateMailAccount(request, keyId, body)
+        return await this.mailAccountService.httpUpdateMailAccount(request, body.keyId, body)
     }
 
-    @ApiServiceDecorator(Delete('/:keyId'), {
+    @ApiServiceDecorator(Post('/delete'), {
+        authorize: true,
         operation: { summary: '删除邮箱账号' },
         response: { status: 200, description: 'OK' }
     })
-    public async httpDeleteMailAccount(@Request() request: dto.OmixRequest, @Param('keyId') keyId: number) {
-        return await this.mailAccountService.httpDeleteMailAccount(request, keyId)
+    public async httpDeleteMailAccount(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
+        return await this.mailAccountService.httpDeleteMailAccount(request, body.keyId)
     }
 }

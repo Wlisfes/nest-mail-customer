@@ -1,6 +1,7 @@
 <script lang="tsx">
-import { defineComponent, h } from 'vue'
-import { faker } from '@faker-js/faker'
+import { defineComponent, h, onMounted, watch } from 'vue'
+import { httpFetchMailList, httpMarkMailSeen } from '@/api'
+import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import type { DataTableColumns } from 'naive-ui'
@@ -12,21 +13,37 @@ export default defineComponent({
             loading: false,
             page: 1,
             size: 20,
-            total: 50,
-            list: Array.from({ length: 20 }, (_, i) => ({
-                keyId: faker.number.int({ min: 1000, max: 9999 }),
-                fromAddress: faker.internet.email(),
-                subject: faker.helpers.arrayElement([
-                    '项目进度更新 - Q1 报告', '会议纪要: 产品评审', '合同审批通知',
-                    '服务器告警: CPU 使用率过高', '周报提交提醒', '新版本发布公告 v2.5',
-                    '客户反馈汇总 - 3月', '假期申请审批结果', '团队建设活动通知',
-                    '安全更新提醒', '月度财务报表', '招聘面试安排'
-                ]),
-                date: dayjs().subtract(faker.number.int({ min: 1, max: 168 }), 'hour').format('YYYY-MM-DD HH:mm'),
-                seen: i > 4 ? 1 : 0,
-                hasAttachment: faker.datatype.boolean() ? 1 : 0
-            }))
+            total: 0,
+            list: [] as any[]
         })
+
+        async function fetchList() {
+            await setState({ loading: true })
+            try {
+                const res: any = await httpFetchMailList({ folder: 'INBOX', page: state.page, size: state.size })
+                const data = res.data ?? res
+                await setState({ list: data.list ?? [], total: data.total ?? 0 })
+            } catch (err) {
+                console.error('获取收件箱失败', err)
+            } finally {
+                await setState({ loading: false })
+            }
+        }
+
+        async function handleMarkAllSeen() {
+            try {
+                for (const item of state.list.filter((m: any) => !m.seen)) {
+                    await httpMarkMailSeen(item.keyId)
+                }
+                $message.success('全部标记已读')
+                await fetchList()
+            } catch (err) {
+                console.error('标记失败', err)
+            }
+        }
+
+        onMounted(() => fetchList())
+        watch(() => state.page, () => fetchList())
 
         const columns: DataTableColumns = [
             {
@@ -56,7 +73,12 @@ export default defineComponent({
                 align: 'center',
                 render: (row: any) => row.hasAttachment ? h('span', null, '📎') : null
             },
-            { title: '时间', key: 'date', width: 160 }
+            {
+                title: '时间',
+                key: 'date',
+                width: 160,
+                render: (row: any) => row.date ? dayjs(row.date).format('YYYY-MM-DD HH:mm') : ''
+            }
         ]
 
         return () => (
@@ -64,8 +86,8 @@ export default defineComponent({
                 <div class="flex items-center justify-between">
                     <n-text class="text-20" style={{ fontWeight: 700 }}>收件箱</n-text>
                     <div class="flex gap-8">
-                        <n-button size="small" secondary>全部标记已读</n-button>
-                        <n-button size="small" secondary>刷新</n-button>
+                        <n-button size="small" secondary onClick={handleMarkAllSeen}>全部标记已读</n-button>
+                        <n-button size="small" secondary onClick={() => fetchList()}>刷新</n-button>
                     </div>
                 </div>
                 <n-data-table
@@ -81,7 +103,7 @@ export default defineComponent({
                 <div class="flex justify-end">
                     <n-pagination
                         v-model:page={state.page}
-                        page-count={Math.ceil(state.total / state.size)}
+                        page-count={Math.ceil(state.total / state.size) || 1}
                         show-quick-jumper
                     />
                 </div>

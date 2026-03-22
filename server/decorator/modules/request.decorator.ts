@@ -11,7 +11,7 @@ export interface OptionDecorator {
     /**分页列表类型**/
     customize: { status: number; description: string; type: Type<unknown> }
     /**登录校验**/
-    authorize: AuthOptions
+    authorize: boolean | AuthOptions
     /**入参类型定义**/
     consumes: string[]
     /**出类型定义**/

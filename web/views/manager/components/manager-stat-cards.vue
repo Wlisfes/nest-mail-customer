@@ -1,46 +1,63 @@
 <script lang="tsx">
-import { defineComponent } from 'vue'
-import { faker } from '@faker-js/faker'
+import { defineComponent, onMounted } from 'vue'
+import { httpFetchDashboardStats } from '@/api'
 import { useState } from '@/hooks'
 
 export default defineComponent({
     name: 'ManagerStatCards',
     setup() {
-        const { state } = useState({
+        const { state, setState } = useState({
             cards: [
                 {
                     label: '总邮件数',
-                    value: faker.number.int({ min: 1200, max: 9800 }),
-                    trend: faker.number.float({ min: 2, max: 18, fractionDigits: 1 }),
+                    value: 0,
+                    trend: 0,
                     trendUp: true,
                     color: 'rgba(99, 125, 255, 0.15)',
                     textColor: '#536dfe'
                 },
                 {
                     label: '未读邮件',
-                    value: faker.number.int({ min: 10, max: 120 }),
-                    trend: faker.number.float({ min: 1, max: 12, fractionDigits: 1 }),
+                    value: 0,
+                    trend: 0,
                     trendUp: false,
                     color: 'rgba(240, 160, 32, 0.15)',
                     textColor: '#f0a020'
                 },
                 {
                     label: '今日发送',
-                    value: faker.number.int({ min: 3, max: 45 }),
-                    trend: faker.number.float({ min: 5, max: 25, fractionDigits: 1 }),
+                    value: 0,
+                    trend: 0,
                     trendUp: true,
                     color: 'rgba(24, 160, 88, 0.15)',
                     textColor: '#18a058'
                 },
                 {
                     label: '附件邮件',
-                    value: faker.number.int({ min: 50, max: 500 }),
-                    trend: faker.number.float({ min: 0.5, max: 8, fractionDigits: 1 }),
+                    value: 0,
+                    trend: 0,
                     trendUp: true,
                     color: 'rgba(208, 48, 80, 0.15)',
                     textColor: '#d03050'
                 }
             ]
+        })
+
+        onMounted(async () => {
+            try {
+                const res: any = await httpFetchDashboardStats()
+                const data = res.data ?? res
+                setState({
+                    cards: [
+                        { ...state.cards[0], value: data.totalMails ?? 0 },
+                        { ...state.cards[1], value: data.unreadMails ?? 0 },
+                        { ...state.cards[2], value: data.sentToday ?? 0 },
+                        { ...state.cards[3], value: data.attachmentMails ?? 0 }
+                    ]
+                })
+            } catch (err) {
+                console.error('获取统计数据失败', err)
+            }
         })
 
         return () => (

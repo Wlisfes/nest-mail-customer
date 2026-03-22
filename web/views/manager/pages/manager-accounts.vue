@@ -1,6 +1,7 @@
 <script lang="tsx">
-import { defineComponent, h, ref } from 'vue'
-import { faker } from '@faker-js/faker'
+import { defineComponent, h, ref, onMounted } from 'vue'
+import { httpFetchMailAccounts, httpCreateMailAccount, httpDeleteMailAccount } from '@/api'
+import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import type { DataTableColumns } from 'naive-ui'
@@ -12,30 +13,7 @@ export default defineComponent({
 
         const { state, setState } = useState({
             loading: false,
-            list: [
-                {
-                    keyId: 1,
-                    email: 'work@qq.com',
-                    provider: 'qq',
-                    imapHost: 'imap.qq.com',
-                    imapPort: 993,
-                    smtpHost: 'smtp.qq.com',
-                    smtpPort: 465,
-                    status: 0,
-                    createTime: dayjs().subtract(30, 'day').format('YYYY-MM-DD')
-                },
-                {
-                    keyId: 2,
-                    email: 'personal@163.com',
-                    provider: '163',
-                    imapHost: 'imap.163.com',
-                    imapPort: 993,
-                    smtpHost: 'smtp.163.com',
-                    smtpPort: 465,
-                    status: 0,
-                    createTime: dayjs().subtract(15, 'day').format('YYYY-MM-DD')
-                }
-            ],
+            list: [] as any[],
             form: {
                 email: '',
                 provider: null as string | null,
@@ -56,6 +34,52 @@ export default defineComponent({
             outlook: 'Outlook',
             gmail: 'Gmail'
         }
+
+        async function fetchList() {
+            await setState({ loading: true })
+            try {
+                const res: any = await httpFetchMailAccounts()
+                const data = res.data ?? res
+                await setState({ list: Array.isArray(data) ? data : (data.list ?? []) })
+            } catch (err) {
+                console.error('获取邮箱列表失败', err)
+            } finally {
+                await setState({ loading: false })
+            }
+        }
+
+        async function handleAdd() {
+            if (!state.form.provider || !state.form.email || !state.form.authCode) {
+                $message.warning('请填写完整信息')
+                return false
+            }
+            try {
+                await httpCreateMailAccount({
+                    email: state.form.email,
+                    provider: state.form.provider,
+                    authCode: state.form.authCode
+                })
+                showModal.value = false
+                $message.success('邮箱添加成功')
+                await setState({ form: { email: '', provider: null, authCode: '' } })
+                await fetchList()
+            } catch (err: any) {
+                $message.error(err.message || '添加失败')
+                return false
+            }
+        }
+
+        async function handleDelete(keyId: number) {
+            try {
+                await httpDeleteMailAccount(keyId)
+                $message.success('删除成功')
+                await fetchList()
+            } catch (err) {
+                console.error('删除失败', err)
+            }
+        }
+
+        onMounted(() => fetchList())
 
         const columns: DataTableColumns = [
             {
@@ -79,14 +103,22 @@ export default defineComponent({
                     processing: row.status === 0
                 })
             },
-            { title: '添加时间', key: 'createTime', width: 120 },
+            {
+                title: '添加时间',
+                key: 'createTime',
+                width: 120,
+                render: (row: any) => row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD') : ''
+            },
             {
                 title: '操作',
                 key: 'actions',
                 width: 120,
                 render: (row: any) => h('div', { class: 'flex gap-8' }, [
                     h('n-button', { size: 'small', type: 'warning', text: true, focusable: false }, () => '同步'),
-                    h('n-button', { size: 'small', type: 'error', text: true, focusable: false }, () => '删除')
+                    h('n-button', {
+                        size: 'small', type: 'error', text: true, focusable: false,
+                        onClick: () => handleDelete(row.keyId)
+                    }, () => '删除')
                 ])
             }
         ]
@@ -105,6 +137,7 @@ export default defineComponent({
                     row-key={(row: any) => row.keyId}
                     bordered={false}
                     striped
+                    loading={state.loading}
                 />
 
                 <n-modal
@@ -113,10 +146,7 @@ export default defineComponent({
                     title="添加邮箱账号"
                     positive-text="确认添加"
                     negative-text="取消"
-                    onPositiveClick={() => {
-                        showModal.value = false
-                        window.$message?.success('邮箱添加成功')
-                    }}
+                    onPositiveClick={handleAdd}
                 >
                     <n-form label-placement="left" label-width={80} class="m-bs-16">
                         <n-form-item label="邮箱平台">

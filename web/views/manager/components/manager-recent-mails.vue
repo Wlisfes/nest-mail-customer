@@ -1,6 +1,6 @@
 <script lang="tsx">
-import { defineComponent } from 'vue'
-import { faker } from '@faker-js/faker'
+import { defineComponent, onMounted } from 'vue'
+import { httpFetchMailList } from '@/api'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 
@@ -9,25 +9,37 @@ export default defineComponent({
     setup() {
         const colors = ['#536dfe', '#18a058', '#f0a020', '#d03050', '#7c3aed']
 
-        const { state } = useState({
-            mails: Array.from({ length: 6 }, (_, i) => ({
-                id: faker.string.uuid(),
-                sender: faker.person.fullName(),
-                email: faker.internet.email(),
-                subject: faker.helpers.arrayElement([
-                    '项目进度更新',
-                    '会议纪要 - Q1 回顾',
-                    '合同审批通知',
-                    '服务器告警: CPU 使用率过高',
-                    '周报提交提醒',
-                    '新版本发布公告',
-                    '客户反馈汇总',
-                    '假期申请审批'
-                ]),
-                time: dayjs().subtract(faker.number.int({ min: 1, max: 72 }), 'hour').format('MM/DD HH:mm'),
-                unread: i < 3,
-                color: colors[i % colors.length]
-            }))
+        const { state, setState } = useState({
+            mails: [] as Array<{
+                id: number
+                sender: string
+                email: string
+                subject: string
+                time: string
+                unread: boolean
+                color: string
+            }>
+        })
+
+        onMounted(async () => {
+            try {
+                const res: any = await httpFetchMailList({ folder: 'INBOX', page: 1, size: 6 })
+                const data = res.data ?? res
+                const list = data.list ?? []
+                setState({
+                    mails: list.map((item: any, i: number) => ({
+                        id: item.keyId,
+                        sender: item.fromAddress?.split('@')[0] ?? item.fromAddress,
+                        email: item.fromAddress,
+                        subject: item.subject ?? '(无主题)',
+                        time: item.date ? dayjs(item.date).format('MM/DD HH:mm') : '',
+                        unread: !item.seen,
+                        color: colors[i % colors.length]
+                    }))
+                })
+            } catch (err) {
+                console.error('获取最近邮件失败', err)
+            }
         })
 
         return () => (

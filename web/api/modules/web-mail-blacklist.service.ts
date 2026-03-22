@@ -3,7 +3,7 @@ import { request } from '@/utils'
 /**添加黑名单**/
 export function httpAddBlacklist(body: Omix) {
     return request({
-        url: `/api/mail-blacklist`,
+        url: `/api/mail-blacklist/add`,
         method: 'POST',
         data: body
     })
@@ -13,14 +13,15 @@ export function httpAddBlacklist(body: Omix) {
 export function httpFetchBlacklist() {
     return request({
         url: `/api/mail-blacklist/list`,
-        method: 'GET'
+        method: 'POST'
     })
 }
 
 /**移除黑名单**/
 export function httpRemoveBlacklist(keyId: number) {
     return request({
-        url: `/api/mail-blacklist/${keyId}`,
-        method: 'DELETE'
+        url: `/api/mail-blacklist/delete`,
+        method: 'POST',
+        data: { keyId }
     })
 }

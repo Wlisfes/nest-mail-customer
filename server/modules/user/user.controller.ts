@@ -1,4 +1,4 @@
-import { Post, Body, Request, Get } from '@nestjs/common'
+import { Post, Body, Request } from '@nestjs/common'
 import { ApifoxController, ApiServiceDecorator } from '@server/decorator'
 import { UserService } from '@server/modules/user/user.service'
 import * as dto from '@server/interface'
@@ -31,7 +31,7 @@ export class UserController {
         return await this.userService.httpBaseUserAuthorization(request, body)
     }
 
-    @ApiServiceDecorator(Get('/resolver'), {
+    @ApiServiceDecorator(Post('/resolver'), {
         operation: { summary: '用户信息' },
         response: { status: 200, description: 'OK' }
     })

@@ -1,4 +1,4 @@
-import { Post, Body, Request, Get, Delete, Param } from '@nestjs/common'
+import { Post, Body, Request } from '@nestjs/common'
 import { ApifoxController, ApiServiceDecorator } from '@server/decorator'
 import { MailDraftService } from '@server/modules/mail-draft/mail-draft.service'
 import * as dto from '@server/interface'
@@ -7,7 +7,7 @@ import * as dto from '@server/interface'
 export class MailDraftController {
     constructor(private readonly mailDraftService: MailDraftService) {}
 
-    @ApiServiceDecorator(Post('/'), {
+    @ApiServiceDecorator(Post('/save'), {
         operation: { summary: '保存草稿' },
         response: { status: 200, description: 'OK' }
     })
@@ -15,7 +15,7 @@ export class MailDraftController {
         return await this.mailDraftService.httpSaveDraft(request, body)
     }
 
-    @ApiServiceDecorator(Get('/list'), {
+    @ApiServiceDecorator(Post('/list'), {
         operation: { summary: '获取草稿列表' },
         response: { status: 200, description: 'OK' }
     })
@@ -23,11 +23,11 @@ export class MailDraftController {
         return await this.mailDraftService.httpFetchDrafts(request)
     }
 
-    @ApiServiceDecorator(Delete('/:keyId'), {
+    @ApiServiceDecorator(Post('/delete'), {
         operation: { summary: '删除草稿' },
         response: { status: 200, description: 'OK' }
     })
-    public async httpDeleteDraft(@Request() request: dto.OmixRequest, @Param('keyId') keyId: number) {
-        return await this.mailDraftService.httpDeleteDraft(request, keyId)
+    public async httpDeleteDraft(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
+        return await this.mailDraftService.httpDeleteDraft(request, body.keyId)
     }
 }

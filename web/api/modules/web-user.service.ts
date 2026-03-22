@@ -22,6 +22,6 @@ export function httpBaseUserAuthorization(body: Omix) {
 export function httpBaseUserResolver() {
     return request({
         url: `/api/user/resolver`,
-        method: 'GET'
+        method: 'POST'
     })
 }

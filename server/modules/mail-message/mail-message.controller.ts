@@ -1,4 +1,4 @@
-import { Post, Body, Request, Get, Put, Param, Query } from '@nestjs/common'
+import { Post, Body, Request } from '@nestjs/common'
 import { ApifoxController, ApiServiceDecorator } from '@server/decorator'
 import { MailMessageService } from '@server/modules/mail-message/mail-message.service'
 import * as dto from '@server/interface'
@@ -7,12 +7,12 @@ import * as dto from '@server/interface'
 export class MailMessageController {
     constructor(private readonly mailMessageService: MailMessageService) {}
 
-    @ApiServiceDecorator(Get('/list'), {
+    @ApiServiceDecorator(Post('/list'), {
         operation: { summary: '邮件列表' },
         response: { status: 200, description: 'OK' }
     })
-    public async httpFetchMailList(@Request() request: dto.OmixRequest, @Query() query: dto.FetchMailListOptions) {
-        return await this.mailMessageService.httpFetchMailList(request, query)
+    public async httpFetchMailList(@Request() request: dto.OmixRequest, @Body() body: dto.FetchMailListOptions) {
+        return await this.mailMessageService.httpFetchMailList(request, body)
     }
 
     @ApiServiceDecorator(Post('/send'), {
@@ -23,11 +23,11 @@ export class MailMessageController {
         return await this.mailMessageService.httpSendMail(request, body)
     }
 
-    @ApiServiceDecorator(Put('/seen/:keyId'), {
+    @ApiServiceDecorator(Post('/seen'), {
         operation: { summary: '标记已读' },
         response: { status: 200, description: 'OK' }
     })
-    public async httpMarkMailSeen(@Request() request: dto.OmixRequest, @Param('keyId') keyId: number) {
-        return await this.mailMessageService.httpMarkMailSeen(request, keyId)
+    public async httpMarkMailSeen(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
+        return await this.mailMessageService.httpMarkMailSeen(request, body.keyId)
     }
 }

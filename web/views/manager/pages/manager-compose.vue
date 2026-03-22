@@ -1,5 +1,7 @@
 <script lang="tsx">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, onMounted } from 'vue'
+import { httpFetchMailAccounts, httpSendMail, httpSaveDraft } from '@/api'
+import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import { useRouter } from 'vue-router'
 
@@ -13,29 +15,58 @@ export default defineComponent({
             to: '',
             subject: '',
             html: '',
-            accounts: [
-                { label: 'test@qq.com (QQ 邮箱)', value: 1 },
-                { label: 'test@163.com (网易 163)', value: 2 }
-            ]
+            accounts: [] as Array<{ label: string; value: number }>
+        })
+
+        onMounted(async () => {
+            try {
+                const res: any = await httpFetchMailAccounts()
+                const data = res.data ?? res
+                const list = Array.isArray(data) ? data : (data.list ?? [])
+                await setState({
+                    accounts: list.map((item: any) => ({
+                        label: `${item.email} (${item.provider})`,
+                        value: item.keyId
+                    }))
+                })
+            } catch (err) {
+                console.error('获取邮箱账号列表失败', err)
+            }
         })
 
         async function handleSend() {
             if (!state.accountId || !state.to || !state.subject || !state.html) {
-                window.$message?.warning('请填写完整信息')
+                $message.warning('请填写完整信息')
                 return
             }
             await setState({ loading: true })
-            // TODO: call httpSendMail API
-            setTimeout(async () => {
-                await setState({ loading: false })
-                window.$message?.success('发送成功')
+            try {
+                await httpSendMail({
+                    accountId: state.accountId,
+                    to: state.to,
+                    subject: state.subject,
+                    html: state.html
+                })
+                $message.success('发送成功')
                 router.push('/manager/sent')
-            }, 1000)
+            } catch (err) {
+                $message.error('发送失败')
+            } finally {
+                await setState({ loading: false })
+            }
         }
 
         async function handleSaveDraft() {
-            // TODO: call httpSaveDraft API
-            window.$message?.success('草稿已保存')
+            try {
+                await httpSaveDraft({
+                    toAddress: state.to,
+                    subject: state.subject,
+                    content: state.html
+                })
+                $message.success('草稿已保存')
+            } catch (err) {
+                $message.error('保存失败')
+            }
         }
 
         return () => (

@@ -1,6 +1,7 @@
 <script lang="tsx">
-import { defineComponent, h, ref } from 'vue'
-import { faker } from '@faker-js/faker'
+import { defineComponent, h, ref, onMounted } from 'vue'
+import { httpFetchBlacklist, httpAddBlacklist, httpRemoveBlacklist } from '@/api'
+import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import type { DataTableColumns } from 'naive-ui'
@@ -10,18 +11,52 @@ export default defineComponent({
     setup() {
         const showModal = ref(false)
 
-        const { state } = useState({
-            list: Array.from({ length: 4 }, () => ({
-                keyId: faker.number.int({ min: 1000, max: 9999 }),
-                email: faker.internet.email(),
-                reason: faker.helpers.arrayElement(['垃圾邮件', '广告邮件', '钓鱼邮件', '恶意邮件', '']),
-                createTime: dayjs().subtract(faker.number.int({ min: 1, max: 60 }), 'day').format('YYYY-MM-DD')
-            })),
+        const { state, setState } = useState({
+            list: [] as any[],
             form: {
                 email: '',
                 reason: ''
             }
         })
+
+        async function fetchList() {
+            try {
+                const res: any = await httpFetchBlacklist()
+                const data = res.data ?? res
+                await setState({ list: Array.isArray(data) ? data : (data.list ?? []) })
+            } catch (err) {
+                console.error('获取黑名单失败', err)
+            }
+        }
+
+        async function handleAdd() {
+            if (!state.form.email) {
+                $message.warning('请输入邮箱地址')
+                return false
+            }
+            try {
+                await httpAddBlacklist({ email: state.form.email, reason: state.form.reason })
+                showModal.value = false
+                $message.success('已添加至黑名单')
+                await setState({ form: { email: '', reason: '' } })
+                await fetchList()
+            } catch (err: any) {
+                $message.error(err.message || '添加失败')
+                return false
+            }
+        }
+
+        async function handleRemove(keyId: number) {
+            try {
+                await httpRemoveBlacklist(keyId)
+                $message.success('已移除')
+                await fetchList()
+            } catch (err) {
+                console.error('移除失败', err)
+            }
+        }
+
+        onMounted(() => fetchList())
 
         const columns: DataTableColumns = [
             { title: '邮箱地址', key: 'email', ellipsis: { tooltip: true } },
@@ -30,12 +65,20 @@ export default defineComponent({
                 key: 'reason',
                 render: (row: any) => h('n-text', { depth: row.reason ? 1 : 3 }, () => row.reason || '未填写')
             },
-            { title: '添加时间', key: 'createTime', width: 120 },
+            {
+                title: '添加时间',
+                key: 'createTime',
+                width: 120,
+                render: (row: any) => row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD') : ''
+            },
             {
                 title: '操作',
                 key: 'actions',
                 width: 80,
-                render: () => h('n-button', { size: 'small', type: 'error', text: true, focusable: false }, () => '移除')
+                render: (row: any) => h('n-button', {
+                    size: 'small', type: 'error', text: true, focusable: false,
+                    onClick: () => handleRemove(row.keyId)
+                }, () => '移除')
             }
         ]
 
@@ -65,10 +108,7 @@ export default defineComponent({
                     title="添加黑名单"
                     positive-text="确认"
                     negative-text="取消"
-                    onPositiveClick={() => {
-                        showModal.value = false
-                        window.$message?.success('已添加至黑名单')
-                    }}
+                    onPositiveClick={handleAdd}
                 >
                     <n-form label-placement="left" label-width={80} class="m-bs-16">
                         <n-form-item label="邮箱地址">

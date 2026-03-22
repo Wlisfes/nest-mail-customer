@@ -1,6 +1,6 @@
 <script lang="tsx">
-import { defineComponent, h } from 'vue'
-import { faker } from '@faker-js/faker'
+import { defineComponent, h, onMounted, watch } from 'vue'
+import { httpFetchMailList } from '@/api'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import type { DataTableColumns } from 'naive-ui'
@@ -8,23 +8,29 @@ import type { DataTableColumns } from 'naive-ui'
 export default defineComponent({
     name: 'ManagerSent',
     setup() {
-        const { state } = useState({
+        const { state, setState } = useState({
             loading: false,
             page: 1,
             size: 20,
-            total: 35,
-            list: Array.from({ length: 15 }, () => ({
-                keyId: faker.number.int({ min: 1000, max: 9999 }),
-                toAddress: faker.internet.email(),
-                subject: faker.helpers.arrayElement([
-                    'Re: 项目进度更新', 'Re: 会议纪要', '合同已签署',
-                    '服务器维护通知', '本周工作汇报', '版本发布说明',
-                    '回复: 客户需求确认', 'Fwd: 假期安排'
-                ]),
-                date: dayjs().subtract(faker.number.int({ min: 1, max: 168 }), 'hour').format('YYYY-MM-DD HH:mm'),
-                hasAttachment: faker.datatype.boolean() ? 1 : 0
-            }))
+            total: 0,
+            list: [] as any[]
         })
+
+        async function fetchList() {
+            await setState({ loading: true })
+            try {
+                const res: any = await httpFetchMailList({ folder: 'Sent', page: state.page, size: state.size })
+                const data = res.data ?? res
+                await setState({ list: data.list ?? [], total: data.total ?? 0 })
+            } catch (err) {
+                console.error('获取已发送失败', err)
+            } finally {
+                await setState({ loading: false })
+            }
+        }
+
+        onMounted(() => fetchList())
+        watch(() => state.page, () => fetchList())
 
         const columns: DataTableColumns = [
             { title: '收件人', key: 'toAddress', width: 200, ellipsis: { tooltip: true } },
@@ -36,7 +42,12 @@ export default defineComponent({
                 align: 'center',
                 render: (row: any) => row.hasAttachment ? h('span', null, '📎') : null
             },
-            { title: '时间', key: 'date', width: 160 }
+            {
+                title: '时间',
+                key: 'date',
+                width: 160,
+                render: (row: any) => row.date ? dayjs(row.date).format('YYYY-MM-DD HH:mm') : ''
+            }
         ]
 
         return () => (
@@ -55,7 +66,7 @@ export default defineComponent({
                 <div class="flex justify-end">
                     <n-pagination
                         v-model:page={state.page}
-                        page-count={Math.ceil(state.total / state.size)}
+                        page-count={Math.ceil(state.total / state.size) || 1}
                         show-quick-jumper
                     />
                 </div>

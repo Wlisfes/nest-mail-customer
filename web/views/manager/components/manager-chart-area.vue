@@ -1,6 +1,6 @@
 <script lang="tsx">
 import { defineComponent, onMounted, ref, watch, shallowRef } from 'vue'
-import { faker } from '@faker-js/faker'
+import { httpFetchDashboardTrend, httpFetchDashboardDistribution } from '@/api'
 import { useMouse, useStore } from '@/store'
 import * as echarts from 'echarts/core'
 import { LineChart, PieChart } from 'echarts/charts'
@@ -23,20 +23,12 @@ export default defineComponent({
         const pieChart = shallowRef<echarts.ECharts>()
         const { inverted } = useStore(useMouse)
 
-        const days = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date()
-            d.setDate(d.getDate() - (6 - i))
-            return `${d.getMonth() + 1}/${d.getDate()}`
+        const chartData = ref({
+            days: [] as string[],
+            receivedData: [] as number[],
+            sentData: [] as number[],
+            pieData: [] as { name: string; value: number }[]
         })
-        const receivedData = days.map(() => faker.number.int({ min: 5, max: 60 }))
-        const sentData = days.map(() => faker.number.int({ min: 2, max: 30 }))
-
-        const pieData = [
-            { name: 'QQ 邮箱', value: faker.number.int({ min: 200, max: 800 }) },
-            { name: '网易 163', value: faker.number.int({ min: 100, max: 500 }) },
-            { name: 'Outlook', value: faker.number.int({ min: 50, max: 300 }) },
-            { name: 'Gmail', value: faker.number.int({ min: 30, max: 200 }) }
-        ]
 
         function getTextColor() {
             return inverted.value ? 'rgba(255,255,255,0.82)' : 'rgba(51,54,57,1)'
@@ -58,7 +50,7 @@ export default defineComponent({
                 grid: { top: 16, left: 48, right: 16, bottom: 36 },
                 xAxis: {
                     type: 'category',
-                    data: days,
+                    data: chartData.value.days,
                     axisLabel: { color: getSubTextColor() },
                     axisLine: { lineStyle: { color: getSubTextColor() } }
                 },
@@ -72,7 +64,7 @@ export default defineComponent({
                         name: '收件',
                         type: 'line',
                         smooth: true,
-                        data: receivedData,
+                        data: chartData.value.receivedData,
                         itemStyle: { color: '#536dfe' },
                         areaStyle: {
                             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -85,7 +77,7 @@ export default defineComponent({
                         name: '发件',
                         type: 'line',
                         smooth: true,
-                        data: sentData,
+                        data: chartData.value.sentData,
                         itemStyle: { color: '#18a058' },
                         areaStyle: {
                             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -119,7 +111,7 @@ export default defineComponent({
                         emphasis: {
                             label: { show: true, fontWeight: 'bold', color: getTextColor() }
                         },
-                        data: pieData,
+                        data: chartData.value.pieData,
                         color: ['#536dfe', '#f0a020', '#18a058', '#d03050']
                     }
                 ]
@@ -131,7 +123,23 @@ export default defineComponent({
             pieChart.value?.resize()
         }
 
-        onMounted(() => {
+        onMounted(async () => {
+            try {
+                const [trendRes, distRes]: any[] = await Promise.all([
+                    httpFetchDashboardTrend(),
+                    httpFetchDashboardDistribution()
+                ])
+                const trend = trendRes.data ?? trendRes
+                const dist = distRes.data ?? distRes
+                chartData.value = {
+                    days: trend.days ?? [],
+                    receivedData: trend.receivedData ?? [],
+                    sentData: trend.sentData ?? [],
+                    pieData: Array.isArray(dist) ? dist : []
+                }
+            } catch (err) {
+                console.error('获取图表数据失败', err)
+            }
             initLineChart()
             initPieChart()
             window.addEventListener('resize', handleResize)

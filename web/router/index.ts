@@ -1,5 +1,7 @@
 import { createRouter as _createRouter, createMemoryHistory, createWebHistory } from 'vue-router'
 import { useCoutext, AUTH } from '@/hooks'
+import MainLayout from '@/components/layouts/main-layout.vue'
+import WebLayout from '@/components/layouts/web-layout.vue'
 import Layout from '@/components/layouts/layout.vue'
 
 export function createRouter(options: Omix<{ ssr: boolean }>) {
@@ -11,11 +13,6 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                 name: Layout.name,
                 component: Layout,
                 children: [
-                    {
-                        path: '/',
-                        meta: { AUTH: 'NONE' },
-                        component: () => import('@/views/home/index.vue')
-                    },
                     {
                         path: '/manager',
                         meta: { AUTH: 'AUTH' },
@@ -29,9 +26,28 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                 ]
             },
             {
+                path: '/web',
+                redirect: '/web/client',
+                name: WebLayout.name,
+                component: WebLayout,
+                children: [
+                    {
+                        path: '/web/client',
+                        meta: { AUTH: 'NONE' },
+                        component: () => import('@/views/home/index.vue')
+                    },
+                    {
+                        path: '/web/:pathMatch(.*)*',
+                        meta: { AUTH: 'NONE' },
+                        component: () => import('@/views/error/404.vue')
+                    }
+                ]
+            },
+            {
                 path: '/main',
-                component: () => import('@/views/main/layout/layout.vue'),
                 redirect: '/main/login',
+                name: MainLayout.name,
+                component: MainLayout,
                 children: [
                     {
                         path: '/main/login',

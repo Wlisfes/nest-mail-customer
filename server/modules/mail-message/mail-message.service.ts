@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common'
 import { Logger, AutoDescriptor } from '@server/modules/logger/logger.service'
 import { DatabaseService } from '@server/modules/database/database.service'
+import { createTransport } from 'nodemailer'
 import * as dto from '@server/interface'
 import * as schema from '@server/modules/database/database.schema'
 
@@ -52,10 +53,11 @@ export class MailMessageService extends Logger {
             if (!account) {
                 throw new HttpException(`邮箱账号不存在`, HttpStatus.BAD_REQUEST)
             }
-            /**记录已发送邮件**/
+            /**先存库，标记发送中**/
             const ctx = await this.database.transaction()
+            let savedMail: any
             try {
-                await this.database.create(ctx.manager.getRepository(schema.SchemaMailMessage), {
+                savedMail = await this.database.create(ctx.manager.getRepository(schema.SchemaMailMessage), {
                     stack: this.stack,
                     request,
                     body: {
@@ -70,7 +72,8 @@ export class MailMessageService extends Logger {
                         hasAttachment: body.attachments && body.attachments.length > 0 ? 1 : 0,
                         date: new Date(),
                         seen: 1,
-                        uid: 0
+                        uid: 0,
+                        sendStatus: 2
                     }
                 })
                 await ctx.commitTransaction()
@@ -80,11 +83,73 @@ export class MailMessageService extends Logger {
             } finally {
                 await ctx.release()
             }
-            return await this.fetchResolver({ message: '发送成功' })
+            /**SMTP 真实发送**/
+            try {
+                const result = await this.smtpSend(account, body)
+                await this.database.schemaMailMessage.update({ keyId: savedMail.keyId } as any, { sendStatus: 0 })
+                return await this.fetchResolver({ message: '发送成功', result })
+            } catch (smtpErr) {
+                await this.database.schemaMailMessage.update({ keyId: savedMail.keyId } as any, { sendStatus: 1 })
+                throw new HttpException(`邮件投递失败: ${smtpErr.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+            }
         } catch (err) {
             this.logger.error(err)
             throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
         }
+    }
+
+    /**重新发送失败邮件**/
+    @AutoDescriptor
+    public async httpResendMail(request: dto.OmixRequest, keyId: number) {
+        try {
+            const mail = await this.database.schemaMailMessage.findOne({ where: { keyId } as any })
+            if (!mail || mail.sendStatus !== 1) {
+                throw new HttpException('该邮件不可重发', HttpStatus.BAD_REQUEST)
+            }
+            const account = await this.database.builder(this.database.schemaMailAccount, async qb => {
+                qb.where(`t.keyId = :keyId`, { keyId: mail.accountId })
+                return await qb.getOne()
+            })
+            if (!account) {
+                throw new HttpException('发件账号不存在', HttpStatus.BAD_REQUEST)
+            }
+            await this.database.schemaMailMessage.update({ keyId } as any, { sendStatus: 2 })
+            try {
+                await this.smtpSend(account, {
+                    to: mail.toAddress,
+                    cc: mail.ccAddress,
+                    bcc: mail.bccAddress,
+                    subject: mail.subject,
+                    html: mail.htmlBody
+                })
+                await this.database.schemaMailMessage.update({ keyId } as any, { sendStatus: 0 })
+                return await this.fetchResolver({ message: '重新发送成功' })
+            } catch (smtpErr) {
+                await this.database.schemaMailMessage.update({ keyId } as any, { sendStatus: 1 })
+                throw new HttpException(`重新发送失败: ${smtpErr.message}`, HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+        } catch (err) {
+            this.logger.error(err)
+            throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    /**SMTP 发送核心**/
+    private async smtpSend(account: any, mail: { to: string; cc?: string; bcc?: string; subject: string; html: string }) {
+        const transporter = await createTransport({
+            host: account.smtpHost,
+            port: account.smtpPort,
+            secure: account.smtpPort === 465,
+            auth: { user: account.email, pass: account.authCode }
+        })
+        return await transporter.sendMail({
+            from: account.email,
+            to: mail.to,
+            cc: mail.cc || undefined,
+            bcc: mail.bcc || undefined,
+            subject: mail.subject,
+            html: mail.html
+        })
     }
 
     /**标记已读**/
@@ -118,10 +183,8 @@ export class MailMessageService extends Logger {
                 where: { messageId: parseInt(keyId) }
             })
             return await this.fetchResolver({
-                data: {
-                    ...mail,
-                    attachments: attachments || []
-                }
+                ...mail,
+                attachments: attachments || []
             })
         } catch (err) {
             this.logger.error(err)

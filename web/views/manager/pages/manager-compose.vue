@@ -1,7 +1,7 @@
 <script lang="tsx">
 import { defineComponent, onMounted, ref, shallowRef, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { httpFetchMailAccounts, httpSendMail, httpSaveDraft, httpFetchMailDetail } from '@/api'
+import { httpFetchMailAccounts, httpSendMail, httpSaveDraft, httpFetchMailDetail, httpFetchDraftDetail, httpDeleteDraft } from '@/api'
 import { $message, $dialog } from '@/utils'
 import { useState } from '@/hooks'
 import { useStore, useMouse } from '@/store'
@@ -199,6 +199,26 @@ ${mail.htmlBody || mail.textBody || ''}
                     console.error('获取原邮件失败', err)
                 }
             }
+
+            // 处理草稿回填
+            const draftId = route.query.draftId as string
+            if (draftId) {
+                try {
+                    const res: any = await httpFetchDraftDetail(parseInt(draftId))
+                    const draft = res.data ?? res
+                    await setState({
+                        to: draft.toAddress ? draft.toAddress.split(/[;,\s]+/).filter(Boolean) : [],
+                        cc: draft.ccAddress ? draft.ccAddress.split(/[;,\s]+/).filter(Boolean) : [],
+                        bcc: draft.bccAddress ? draft.bccAddress.split(/[;,\s]+/).filter(Boolean) : [],
+                        showBcc: !!draft.bccAddress,
+                        subject: draft.subject || '',
+                        html: draft.content || '',
+                        accountId: draft.accountId || state.accountId
+                    })
+                } catch (err) {
+                    console.error('加载草稿失败', err)
+                }
+            }
         })
 
         // 添加收件人
@@ -314,6 +334,13 @@ ${mail.htmlBody || mail.textBody || ''}
                     attachments: state.attachments.map(a => ({ name: a.name, size: a.size }))
                 })
                 $message.success('🎉 发送成功')
+                // 草稿发送成功后自动删除
+                const draftId = route.query.draftId
+                if (draftId) {
+                    try {
+                        await httpDeleteDraft(parseInt(draftId as string))
+                    } catch {}
+                }
                 router.push('/manager/sent')
             } catch (err: any) {
                 $message.error(err.message || '发送失败')
@@ -325,7 +352,9 @@ ${mail.htmlBody || mail.textBody || ''}
         async function handleSaveDraft() {
             await setState({ saving: true })
             try {
-                await httpSaveDraft({
+                const draftId = route.query.draftId
+                const res: any = await httpSaveDraft({
+                    ...(draftId ? { keyId: parseInt(draftId as string) } : {}),
                     accountId: state.accountId,
                     toAddress: state.to.join(', '),
                     ccAddress: state.cc.join(', '),
@@ -334,6 +363,13 @@ ${mail.htmlBody || mail.textBody || ''}
                     content: state.html,
                     attachments: state.attachments.map(a => ({ name: a.name, size: a.size }))
                 })
+                // 首次保存后将 draftId 写入 URL，后续保存走更新
+                if (!draftId) {
+                    const saved = res.data ?? res
+                    if (saved.keyId) {
+                        router.replace({ query: { ...route.query, draftId: String(saved.keyId) } })
+                    }
+                }
                 $message.success('📝 草稿已保存')
             } catch (err) {
                 $message.error('保存失败')
@@ -472,9 +508,17 @@ ${mail.htmlBody || mail.textBody || ''}
                 {/* ===== 表单区域 ===== */}
                 <div class="compose-form">
                     <div class="compose-field-row">
-                        <label class="compose-field-label">当前发件人</label>
+                        <label class="compose-field-label">
+                            <span class="compose-required">*</span>发件人
+                        </label>
                         <div class="compose-field-content">
-                            <span class="compose-sender-email">{currentSenderEmail()}</span>
+                            <n-select
+                                v-model:value={state.accountId}
+                                options={state.accounts}
+                                placeholder="请选择发件邮箱"
+                                size="small"
+                                style={{ width: '300px' }}
+                            />
                         </div>
                     </div>
                     {renderRecipientRow('to', '收件人', true)}
@@ -553,25 +597,6 @@ ${mail.htmlBody || mail.textBody || ''}
                         </div>
                     )}
                 </div>
-
-                {/* ===== 底部栏 ===== */}
-                <div class="compose-bottom-bar">
-                    <div class="compose-bottom-left">
-                        <span class="compose-bottom-label">
-                            <span class="compose-required">*</span>发件人
-                        </span>
-                        <n-select
-                            v-model:value={state.accountId}
-                            options={state.accounts}
-                            placeholder="请选择发件邮箱"
-                            size="small"
-                            style={{ width: '260px' }}
-                        />
-                        <n-checkbox checked={state.urgent} onUpdate:checked={(val: boolean) => setState({ urgent: val })}>
-                            紧急
-                        </n-checkbox>
-                    </div>
-                </div>
             </div>
         )
     }
@@ -618,8 +643,7 @@ ${mail.htmlBody || mail.textBody || ''}
 .compose-field-row {
     display: flex;
     align-items: flex-start;
-    padding: 10px 24px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 8px 24px;
     min-height: 42px;
 }
 

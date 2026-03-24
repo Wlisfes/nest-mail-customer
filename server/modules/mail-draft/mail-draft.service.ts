@@ -13,30 +13,36 @@ export class MailDraftService extends Logger {
     /**保存草稿**/
     @AutoDescriptor
     public async httpSaveDraft(request: dto.OmixRequest, body: dto.SaveDraftOptions) {
-        const ctx = await this.database.transaction()
+        const draftData: any = {
+            userId: request.user.keyId,
+            accountId: body.accountId,
+            toAddress: body.toAddress,
+            ccAddress: body.ccAddress || '',
+            bccAddress: body.bccAddress || '',
+            subject: body.subject,
+            content: body.content,
+            attachments: body.attachments ? JSON.stringify(body.attachments) : ''
+        }
         try {
-            await this.database.create(ctx.manager.getRepository(schema.SchemaMailDraft), {
-                stack: this.stack,
-                request,
-                body: {
-                    accountId: body.accountId,
-                    toAddress: body.toAddress,
-                    ccAddress: body.ccAddress || '',
-                    bccAddress: body.bccAddress || '',
-                    subject: body.subject,
-                    content: body.content,
-                    attachments: body.attachments ? JSON.stringify(body.attachments) : ''
+            if (body.keyId) {
+                await this.database.schemaMailDraft.update({ keyId: body.keyId } as any, draftData)
+                return await this.fetchResolver({ message: '草稿保存成功', keyId: body.keyId })
+            } else {
+                const ctx = await this.database.transaction()
+                try {
+                    const saved = await ctx.manager.getRepository(schema.SchemaMailDraft).save(draftData)
+                    await ctx.commitTransaction()
+                    return await this.fetchResolver({ message: '草稿保存成功', keyId: saved.keyId })
+                } catch (err) {
+                    await ctx.rollbackTransaction()
+                    throw err
+                } finally {
+                    await ctx.release()
                 }
-            })
-            return await ctx.commitTransaction().then(async () => {
-                return await this.fetchResolver({ message: '草稿保存成功' })
-            })
+            }
         } catch (err) {
-            await ctx.rollbackTransaction()
             this.logger.error(err)
             throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
-        } finally {
-            await ctx.release()
         }
     }
 
@@ -45,9 +51,26 @@ export class MailDraftService extends Logger {
     public async httpFetchDrafts(request: dto.OmixRequest) {
         try {
             return await this.database.builder(this.database.schemaMailDraft, async qb => {
+                qb.where(`t.userId = :userId`, { userId: request.user.keyId })
                 qb.orderBy('t.createTime', 'DESC')
-                return await qb.getMany()
+                const list = await qb.getMany()
+                return { list }
             })
+        } catch (err) {
+            this.logger.error(err)
+            throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    /**获取草稿详情**/
+    @AutoDescriptor
+    public async httpFetchDraftDetail(request: dto.OmixRequest, keyId: number) {
+        try {
+            const draft = await this.database.schemaMailDraft.findOne({ where: { keyId } as any })
+            if (!draft) {
+                throw new HttpException('草稿不存在', HttpStatus.NOT_FOUND)
+            }
+            return await this.fetchResolver(draft as any)
         } catch (err) {
             this.logger.error(err)
             throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)

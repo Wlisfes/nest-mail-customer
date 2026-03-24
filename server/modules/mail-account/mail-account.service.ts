@@ -195,7 +195,8 @@ export class MailAccountService extends Logger {
                 envelope: true,
                 uid: true,
                 flags: true,
-                bodyStructure: true
+                bodyStructure: true,
+                source: true
             })
             for await (const msg of messages) {
                 const messageId = msg.envelope?.messageId ?? ''
@@ -210,6 +211,20 @@ export class MailAccountService extends Logger {
                 })
                 if (exists > 0) continue
 
+                /**解析邮件正文**/
+                let htmlBody = ''
+                let textBody = ''
+                try {
+                    if (msg.source) {
+                        const { simpleParser } = await import('mailparser')
+                        const parsed = await simpleParser(msg.source)
+                        htmlBody = parsed.html || ''
+                        textBody = parsed.text || ''
+                    }
+                } catch (parseErr) {
+                    console.warn(`[IMAP-SYNC] 邮件正文解析失败 UID=${msg.uid}:`, parseErr.message)
+                }
+
                 /**写入邮件**/
                 const entity = this.database.schemaMailMessage.create({
                     accountId: account.keyId,
@@ -221,7 +236,9 @@ export class MailAccountService extends Logger {
                     toAddress: msg.envelope?.to?.map(t => t.address).join(', ') ?? '',
                     date: msg.envelope?.date ?? new Date(),
                     seen: msg.flags?.has('\\Seen') ? 1 : 0,
-                    hasAttachment: this.hasAttachments(msg.bodyStructure) ? 1 : 0
+                    hasAttachment: this.hasAttachments(msg.bodyStructure) ? 1 : 0,
+                    htmlBody,
+                    textBody
                 } as any)
                 const savedMessage: Omix = await this.database.schemaMailMessage.save(entity)
 

@@ -159,17 +159,33 @@ export default defineComponent({
                         {/* Subject */}
                         <h1 class="mail-subject">{state.mail.subject || '(无主题)'}</h1>
 
-                        {/* Sender Info */}
+                        {/* Sender/Recipient Info */}
                         <div class="mail-header">
-                            <MailAvatar email={state.mail.fromAddress ?? ''} size={48} />
-                            <div class="mail-sender-info">
-                                <div class="mail-sender-name">{state.mail.fromName || state.mail.fromAddress?.split('@')[0]}</div>
-                                <div class="mail-sender-address">{state.mail.fromAddress}</div>
-                                <div class="mail-meta">
-                                    <span>发送至: {state.mail.toAddress}</span>
-                                    <span class="mail-time">{dayjs(state.mail.date).format('YYYY年MM月DD日 HH:mm')}</span>
-                                </div>
-                            </div>
+                            {state.mail.folder === 'Sent' ? (
+                                <>
+                                    <MailAvatar email={state.mail.toAddress ?? ''} size={48} />
+                                    <div class="mail-sender-info">
+                                        <div class="mail-sender-name">收件人: {state.mail.toAddress?.split('@')[0]}</div>
+                                        <div class="mail-sender-address">{state.mail.toAddress}</div>
+                                        <div class="mail-meta">
+                                            {state.mail.ccAddress && <span>抄送: {state.mail.ccAddress}</span>}
+                                            <span class="mail-time">{dayjs(state.mail.date).format('YYYY年MM月DD日 HH:mm')}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <MailAvatar email={state.mail.fromAddress ?? ''} size={48} />
+                                    <div class="mail-sender-info">
+                                        <div class="mail-sender-name">{state.mail.fromName || state.mail.fromAddress?.split('@')[0]}</div>
+                                        <div class="mail-sender-address">{state.mail.fromAddress}</div>
+                                        <div class="mail-meta">
+                                            <span>发送至: {state.mail.toAddress}</span>
+                                            <span class="mail-time">{dayjs(state.mail.date).format('YYYY年MM月DD日 HH:mm')}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Attachments */}

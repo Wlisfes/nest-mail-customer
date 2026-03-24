@@ -97,7 +97,7 @@ export default defineComponent({
             {
                 title: '发件人',
                 key: 'fromAddress',
-                width: 220,
+                width: 280,
                 render: (row: any) => {
                     const name = row.fromAddress?.split('@')[0] ?? '?'
                     return h('div', { class: 'flex items-center gap-10' }, [
@@ -181,9 +181,9 @@ export default defineComponent({
                     loading={state.loading}
                     row-class-name={(row: any) => (row.seen ? '' : 'font-bold')}
                     style={{ flex: 1, cursor: 'pointer' }}
-                    on-update:expanded-row-keys={(keys: string[]) =>
-                        keys.length > 0 && handleRowClick(state.list.find((m: any) => m.keyId === keys[0]))
-                    }
+                    row-props={(row: any) => ({
+                        onClick: () => handleRowClick(row)
+                    })}
                 />
                 <div class="flex justify-end">
                     <n-pagination v-model:page={state.page} page-count={Math.ceil(state.total / state.size) || 1} show-quick-jumper />

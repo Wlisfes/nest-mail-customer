@@ -55,12 +55,16 @@ export class SchemaMailMessage extends BaseAdapter {
     hasAttachment: number
 
     @ApiProperty({ description: '邮件正文HTML' })
-    @Column({ name: 'html_body', comment: '邮件正文HTML', type: 'text', nullable: true })
+    @Column({ name: 'html_body', comment: '邮件正文HTML', type: 'mediumtext', nullable: true })
     htmlBody: string
 
     @ApiProperty({ description: '邮件纯文本' })
-    @Column({ name: 'text_body', comment: '邮件纯文本', type: 'text', nullable: true })
+    @Column({ name: 'text_body', comment: '邮件纯文本', type: 'mediumtext', nullable: true })
     textBody: string
+
+    @ApiProperty({ description: '发送状态' })
+    @Column({ name: 'send_status', comment: '发送状态: 0=成功, 1=失败, 2=发送中', type: 'tinyint', nullable: false, default: 0 })
+    sendStatus: number
 
     @ApiProperty({ description: '邮件摘要' })
     @Column({ name: 'snippet', comment: '邮件摘要', type: 'text', nullable: true })

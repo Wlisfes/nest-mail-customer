@@ -43,6 +43,15 @@ export class MailMessageController {
         return await this.mailMessageService.httpFetchMailDetail(request, body.keyId)
     }
 
+    @ApiServiceDecorator(Post('/resend'), {
+        authorize: true,
+        operation: { summary: '重新发送失败邮件' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpResendMail(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
+        return await this.mailMessageService.httpResendMail(request, body.keyId)
+    }
+
     @ApiServiceDecorator(Post('/delete'), {
         authorize: true,
         operation: { summary: '删除邮件' },

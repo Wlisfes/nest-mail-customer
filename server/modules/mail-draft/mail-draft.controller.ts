@@ -25,6 +25,15 @@ export class MailDraftController {
         return await this.mailDraftService.httpFetchDrafts(request)
     }
 
+    @ApiServiceDecorator(Post('/detail'), {
+        authorize: true,
+        operation: { summary: '获取草稿详情' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpFetchDraftDetail(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
+        return await this.mailDraftService.httpFetchDraftDetail(request, body.keyId)
+    }
+
     @ApiServiceDecorator(Post('/delete'), {
         authorize: true,
         operation: { summary: '删除草稿' },

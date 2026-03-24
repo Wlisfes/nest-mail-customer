@@ -5,6 +5,11 @@ import { BaseAdapter } from '@server/modules/database/database.adapter'
 
 @Entity({ name: 'tb_mail_draft', comment: '草稿箱表' })
 export class SchemaMailDraft extends BaseAdapter {
+    @ApiProperty({ description: '用户ID' })
+    @IsNotEmpty({ message: '用户ID必填' })
+    @Column({ name: 'user_id', comment: '关联用户keyId', type: 'int', nullable: false })
+    userId: number
+
     @ApiProperty({ description: '邮箱账号ID' })
     @IsNotEmpty({ message: '邮箱账号ID必填' })
     @Column({ name: 'account_id', comment: '关联邮箱账号keyId', type: 'int', nullable: false })

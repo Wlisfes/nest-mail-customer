@@ -51,7 +51,7 @@ export default defineComponent({
             {
                 title: '收件人',
                 key: 'toAddress',
-                width: 200,
+                width: 280,
                 render: (row: any) => {
                     const addr = row.toAddress ?? '未指定'
                     return h('div', { class: 'flex items-center gap-10' }, [
@@ -76,7 +76,7 @@ export default defineComponent({
             {
                 title: '操作',
                 key: 'actions',
-                width: 140,
+                width: 180,
                 render: (row: any) =>
                     h('div', { class: 'flex gap-6' }, [
                         h(
@@ -86,7 +86,7 @@ export default defineComponent({
                                 type: 'info',
                                 secondary: true,
                                 round: true,
-                                onClick: () => router.push('/manager/compose')
+                                onClick: () => router.push({ path: '/manager/compose', query: { draftId: row.keyId } })
                             },
                             () => '✏️ 编辑'
                         ),
@@ -133,8 +133,8 @@ export default defineComponent({
                             row-key={(row: any) => row.keyId}
                             bordered={false}
                             striped
-                            flex-height
                             loading={state.loading}
+                            style={{ flex: 1 }}
                         />
                     </div>
                 )}

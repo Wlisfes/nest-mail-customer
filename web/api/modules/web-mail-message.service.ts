@@ -36,6 +36,15 @@ export function httpFetchMailDetail(keyId: string) {
     })
 }
 
+/**重新发送失败邮件**/
+export function httpResendMail(keyId: number) {
+    return request({
+        url: `/api/mail-message/resend`,
+        method: 'POST',
+        data: { keyId }
+    })
+}
+
 /**删除邮件**/
 export function httpDeleteMail(keyId: string) {
     return request({

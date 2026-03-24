@@ -17,6 +17,15 @@ export function httpFetchDrafts() {
     })
 }
 
+/**获取草稿详情**/
+export function httpFetchDraftDetail(keyId: number) {
+    return request({
+        url: `/api/mail-draft/detail`,
+        method: 'POST',
+        data: { keyId }
+    })
+}
+
 /**删除草稿**/
 export function httpDeleteDraft(keyId: number) {
     return request({

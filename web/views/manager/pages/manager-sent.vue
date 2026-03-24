@@ -1,8 +1,9 @@
 <script lang="tsx">
 import { defineComponent, h, onMounted, ref, watch } from 'vue'
-import { httpFetchMailList, httpSyncAllMailAccounts } from '@/api'
+import { httpFetchMailList, httpSyncAllMailAccounts, httpResendMail } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
+import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -15,6 +16,7 @@ dayjs.locale('zh-cn')
 export default defineComponent({
     name: 'ManagerSent',
     setup() {
+        const router = useRouter()
         const { state, setState } = useState({
             loading: false,
             page: 1,
@@ -60,7 +62,7 @@ export default defineComponent({
             {
                 title: '收件人',
                 key: 'toAddress',
-                width: 220,
+                width: 280,
                 render: (row: any) => {
                     const addr = row.toAddress ?? ''
                     const name = addr.split('@')[0] ?? '?'
@@ -86,6 +88,39 @@ export default defineComponent({
                 key: 'date',
                 width: 140,
                 render: (row: any) => (row.date ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.date).fromNow()) : '')
+            },
+            {
+                title: '状态',
+                key: 'sendStatus',
+                width: 90,
+                align: 'center',
+                render: (row: any) => {
+                    if (row.sendStatus === 1) {
+                        return h('div', { class: 'flex items-center gap-6' }, [
+                            h(NTag, { size: 'small', type: 'error', bordered: false, round: true }, () => '失败'),
+                            h(
+                                'a',
+                                {
+                                    style: { fontSize: '12px', cursor: 'pointer', color: 'var(--primary-color)' },
+                                    onClick: async (e: Event) => {
+                                        e.stopPropagation()
+                                        try {
+                                            await httpResendMail(row.keyId)
+                                            $message.success('重新发送成功')
+                                            fetchList()
+                                        } catch (err: any) {
+                                            $message.error(err.message || '重新发送失败')
+                                        }
+                                    }
+                                },
+                                '重试'
+                            )
+                        ])
+                    }
+                    if (row.sendStatus === 2)
+                        return h(NTag, { size: 'small', type: 'warning', bordered: false, round: true }, () => '发送中')
+                    return h(NTag, { size: 'small', type: 'success', bordered: false, round: true }, () => '已发送')
+                }
             }
         ]
 
@@ -119,7 +154,10 @@ export default defineComponent({
                     striped
                     flex-height
                     loading={state.loading}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, cursor: 'pointer' }}
+                    row-props={(row: any) => ({
+                        onClick: () => router.push(`/manager/mail/${row.keyId}`)
+                    })}
                 />
                 <div class="flex justify-end">
                     <n-pagination v-model:page={state.page} page-count={Math.ceil(state.total / state.size) || 1} show-quick-jumper />

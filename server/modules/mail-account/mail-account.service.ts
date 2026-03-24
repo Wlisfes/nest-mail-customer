@@ -147,7 +147,7 @@ export class MailAccountService extends Logger {
     }
 
     /**IMAP 邮件同步核心逻辑**/
-    private async syncMailFromIMAP(account: any) {
+    public async syncMailFromIMAP(account: any) {
         console.log(`[IMAP-SYNC] 开始同步: ${account.email} -> ${account.imapHost}:${account.imapPort}`)
         const client = new ImapFlow({
             host: account.imapHost,
@@ -199,7 +199,6 @@ export class MailAccountService extends Logger {
                 flags: true,
                 bodyStructure: true
             })
-            console.log(messages)
             for await (const msg of messages) {
                 const messageId = msg.envelope?.messageId ?? ''
                 /**检查是否已存在**/
@@ -212,7 +211,8 @@ export class MailAccountService extends Logger {
                     return await qb.getCount()
                 })
                 if (exists > 0) continue
-                /**写入数据库**/
+
+                /**写入邮件**/
                 const entity = this.database.schemaMailMessage.create({
                     accountId: account.keyId,
                     messageId,
@@ -223,12 +223,50 @@ export class MailAccountService extends Logger {
                     toAddress: msg.envelope?.to?.map(t => t.address).join(', ') ?? '',
                     date: msg.envelope?.date ?? new Date(),
                     seen: msg.flags?.has('\\Seen') ? 1 : 0,
-                    hasAttachment: msg.bodyStructure?.childNodes?.length > 1 ? 1 : 0
+                    hasAttachment: this.hasAttachments(msg.bodyStructure) ? 1 : 0
                 } as any)
-                await this.database.schemaMailMessage.save(entity)
+                const savedMessage: Omix = await this.database.schemaMailMessage.save(entity)
+
+                /**保存附件信息**/
+                if (savedMessage.hasAttachment) {
+                    await this.saveAttachments(savedMessage.keyId, msg.bodyStructure)
+                }
             }
         } finally {
             lock.release()
+        }
+    }
+
+    /**检查是否有附件**/
+    private hasAttachments(bodyStructure: any): boolean {
+        if (!bodyStructure) return false
+        if (bodyStructure.disposition === 'attachment') return true
+        if (bodyStructure.childNodes) {
+            return bodyStructure.childNodes.some((node: any) => this.hasAttachments(node))
+        }
+        return false
+    }
+
+    /**保存附件信息**/
+    private async saveAttachments(messageId: number, bodyStructure: any, partId: string = '') {
+        if (!bodyStructure) return
+
+        if (bodyStructure.disposition === 'attachment' && bodyStructure.parameters?.name) {
+            const attachment = this.database.schemaMailAttachment.create({
+                messageId,
+                filename: bodyStructure.parameters.name,
+                size: bodyStructure.size || 0,
+                mimeType: `${bodyStructure.type}/${bodyStructure.subtype}`,
+                partId: partId
+            } as any)
+            await this.database.schemaMailAttachment.save(attachment)
+        }
+
+        if (bodyStructure.childNodes) {
+            for (let i = 0; i < bodyStructure.childNodes.length; i++) {
+                const childPartId = partId ? `${partId}.${i + 1}` : `${i + 1}`
+                await this.saveAttachments(messageId, bodyStructure.childNodes[i], childPartId)
+            }
         }
     }
 }

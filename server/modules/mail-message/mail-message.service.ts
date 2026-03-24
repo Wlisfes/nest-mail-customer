@@ -21,6 +21,12 @@ export class MailMessageService extends Logger {
                 if (query.folder) {
                     qb.andWhere(`t.folder = :folder`, { folder: query.folder })
                 }
+                if (query.keyword) {
+                    qb.andWhere(
+                        `(t.subject LIKE :keyword OR t.fromAddress LIKE :keyword OR t.toAddress LIKE :keyword OR t.textBody LIKE :keyword)`,
+                        { keyword: `%${query.keyword}%` }
+                    )
+                }
                 qb.orderBy('t.date', 'DESC')
                 qb.skip((query.page - 1) * query.size)
                 qb.take(query.size)
@@ -48,20 +54,27 @@ export class MailMessageService extends Logger {
             /**记录已发送邮件**/
             const ctx = await this.database.transaction()
             try {
-                await this.database.create(ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailMessage), {
-                    stack: this.stack,
-                    request,
-                    body: {
-                        accountId: account.keyId,
-                        folder: 'Sent',
-                        subject: body.subject,
-                        fromAddress: account.email,
-                        toAddress: body.to,
-                        date: new Date(),
-                        seen: 1,
-                        uid: 0
+                await this.database.create(
+                    ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailMessage),
+                    {
+                        stack: this.stack,
+                        request,
+                        body: {
+                            accountId: account.keyId,
+                            folder: 'Sent',
+                            subject: body.subject,
+                            fromAddress: account.email,
+                            toAddress: body.to,
+                            ccAddress: body.cc || '',
+                            bccAddress: body.bcc || '',
+                            htmlBody: body.html,
+                            hasAttachment: body.attachments && body.attachments.length > 0 ? 1 : 0,
+                            date: new Date(),
+                            seen: 1,
+                            uid: 0
+                        }
                     }
-                })
+                )
                 await ctx.commitTransaction()
             } catch (err) {
                 await ctx.rollbackTransaction()
@@ -82,6 +95,51 @@ export class MailMessageService extends Logger {
         try {
             await this.database.schemaMailMessage.update({ keyId } as any, { seen: 1 })
             return await this.fetchResolver({ message: '标记成功' })
+        } catch (err) {
+            this.logger.error(err)
+            throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    /**获取邮件详情**/
+    @AutoDescriptor
+    public async httpFetchMailDetail(request: dto.OmixRequest, keyId: string) {
+        try {
+            const mail = await this.database.schemaMailMessage.findOne({
+                where: { keyId: parseInt(keyId) }
+            })
+            if (!mail) {
+                throw new HttpException('邮件不存在', HttpStatus.NOT_FOUND)
+            }
+            // 标记为已读
+            if (!mail.seen) {
+                await this.database.schemaMailMessage.update({ keyId: parseInt(keyId) } as any, { seen: 1 })
+            }
+            // 获取附件列表
+            const attachments = await this.database.schemaMailAttachment.find({
+                where: { messageId: parseInt(keyId) }
+            })
+            return await this.fetchResolver({ 
+                data: { 
+                    ...mail, 
+                    attachments: attachments || [] 
+                } 
+            })
+        } catch (err) {
+            this.logger.error(err)
+            throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    /**删除邮件**/
+    @AutoDescriptor
+    public async httpDeleteMail(request: dto.OmixRequest, keyId: string) {
+        try {
+            const result = await this.database.schemaMailMessage.delete({ keyId: parseInt(keyId) } as any)
+            if (result.affected === 0) {
+                throw new HttpException('邮件不存在', HttpStatus.NOT_FOUND)
+            }
+            return await this.fetchResolver({ message: '删除成功' })
         } catch (err) {
             this.logger.error(err)
             throw new HttpException(err.message, err.status ?? HttpStatus.INTERNAL_SERVER_ERROR)

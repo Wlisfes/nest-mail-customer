@@ -17,7 +17,15 @@ export class MailDraftService extends Logger {
             await this.database.create(ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailDraft), {
                 stack: this.stack,
                 request,
-                body
+                body: {
+                    accountId: body.accountId,
+                    toAddress: body.toAddress,
+                    ccAddress: body.ccAddress || '',
+                    bccAddress: body.bccAddress || '',
+                    subject: body.subject,
+                    content: body.content,
+                    attachments: body.attachments ? JSON.stringify(body.attachments) : ''
+                }
             })
             return await ctx.commitTransaction().then(async () => {
                 return await this.fetchResolver({ message: '草稿保存成功' })

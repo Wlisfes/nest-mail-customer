@@ -33,4 +33,22 @@ export class MailMessageController {
     public async httpMarkMailSeen(@Request() request: dto.OmixRequest, @Body() body: { keyId: number }) {
         return await this.mailMessageService.httpMarkMailSeen(request, body.keyId)
     }
+
+    @ApiServiceDecorator(Post('/detail'), {
+        authorize: true,
+        operation: { summary: '邮件详情' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpFetchMailDetail(@Request() request: dto.OmixRequest, @Body() body: { keyId: string }) {
+        return await this.mailMessageService.httpFetchMailDetail(request, body.keyId)
+    }
+
+    @ApiServiceDecorator(Post('/delete'), {
+        authorize: true,
+        operation: { summary: '删除邮件' },
+        response: { status: 200, description: 'OK' }
+    })
+    public async httpDeleteMail(@Request() request: dto.OmixRequest, @Body() body: { keyId: string }) {
+        return await this.mailMessageService.httpDeleteMail(request, body.keyId)
+    }
 }

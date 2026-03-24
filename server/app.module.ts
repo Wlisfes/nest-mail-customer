@@ -16,6 +16,7 @@ import { MailMessageModule } from '@server/modules/mail-message/mail-message.mod
 import { MailDraftModule } from '@server/modules/mail-draft/mail-draft.module'
 import { MailBlacklistModule } from '@server/modules/mail-blacklist/mail-blacklist.module'
 import { DashboardModule } from '@server/modules/dashboard/dashboard.module'
+import { AttachmentModule } from '@server/modules/attachment/attachment.module'
 import { AppController } from '@server/app.controller'
 
 @Module({
@@ -31,7 +32,8 @@ import { AppController } from '@server/app.controller'
         MailMessageModule,
         MailDraftModule,
         MailBlacklistModule,
-        DashboardModule
+        DashboardModule,
+        AttachmentModule
     ],
     controllers: [AppController],
     providers: [

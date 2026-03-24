@@ -16,6 +16,11 @@ export class FetchMailListOptions extends PickType(OmixColumnOptions, ['page', '
     @IsNumber({}, { message: 'accountId必须是数字' })
     @Type(type => Number)
     accountId: number
+
+    @ApiProperty({ description: '搜索关键词', required: false })
+    @IsOptional()
+    @IsString({ message: 'keyword必须是字符串' })
+    keyword: string
 }
 
 /**发送邮件**/
@@ -30,6 +35,16 @@ export class SendMailOptions {
     @IsNotEmpty({ message: '收件人邮箱必填' })
     to: string
 
+    @ApiProperty({ description: '抄送', required: false })
+    @IsOptional()
+    @IsString({ message: 'cc必须是字符串' })
+    cc: string
+
+    @ApiProperty({ description: '密送', required: false })
+    @IsOptional()
+    @IsString({ message: 'bcc必须是字符串' })
+    bcc: string
+
     @ApiProperty({ description: '邮件主题' })
     @IsNotEmpty({ message: '邮件主题必填' })
     subject: string
@@ -37,4 +52,8 @@ export class SendMailOptions {
     @ApiProperty({ description: '邮件正文 HTML' })
     @IsNotEmpty({ message: '邮件正文必填' })
     html: string
+
+    @ApiProperty({ description: '附件列表', required: false })
+    @IsOptional()
+    attachments: Array<{ name: string; size: number }>
 }

@@ -121,18 +121,16 @@ export default defineComponent({
                         <n-button size="small" secondary round onClick={() => fetchList()}>🔃 刷新</n-button>
                     </div>
                 </div>
-                <div class="mail-table-wrap flex-1 overflow-hidden">
-                    <n-data-table
-                        columns={columns}
-                        data={state.list}
-                        row-key={(row: any) => row.keyId}
-                        bordered={false}
-                        striped
-                        flex-height
-                        class="flex-1"
-                        loading={state.loading}
-                    />
-                </div>
+                <n-data-table
+                    columns={columns}
+                    data={state.list}
+                    row-key={(row: any) => row.keyId}
+                    bordered={false}
+                    striped
+                    flex-height
+                    loading={state.loading}
+                    style={{ flex: 1 }}
+                />
                 <div class="flex justify-end">
                     <n-pagination
                         v-model:page={state.page}

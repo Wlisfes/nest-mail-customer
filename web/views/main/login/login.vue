@@ -30,7 +30,7 @@ export default defineComponent({
                         password: window.btoa(encodeURIComponent(formState.value.password))
                     }).then(async ({ data }) => {
                         cookies.set(AUTH.APP_NEST_TOKEN, data.token)
-                        return router.push({ path: '/manager', replace: true })
+                        return router.push({ path: '/manager/dashboard', replace: true })
                     })
                 } catch (err) {
                     return await setState({ loading: false, disabled: false } as never)

@@ -1,12 +1,13 @@
 <script lang="tsx">
 import { defineComponent, h, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { httpFetchMailList, httpMarkMailSeen, httpSyncAllMailAccounts } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
-import { NButton, NTag, type DataTableColumns } from 'naive-ui'
+import { NButton, NTag, NInput, type DataTableColumns } from 'naive-ui'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -29,19 +30,32 @@ function hashColor(str: string) {
 export default defineComponent({
     name: 'ManagerInbox',
     setup() {
+        const router = useRouter()
         const { state, setState } = useState({
             loading: false,
             page: 1,
             size: 20,
             total: 0,
-            list: [] as any[]
+            list: [] as any[],
+            keyword: ''
         })
         const syncing = ref(false)
+        const searchTimer = ref<NodeJS.Timeout | null>(null)
+
+        function handleRowClick(row: any) {
+            if (row && row.keyId) {
+                router.push({ path: `/manager/mail/${row.keyId}` })
+            }
+        }
 
         async function fetchList() {
             await setState({ loading: true })
             try {
-                const res: any = await httpFetchMailList({ folder: 'INBOX', page: state.page, size: state.size })
+                const params: any = { folder: 'INBOX', page: state.page, size: state.size }
+                if (state.keyword.trim()) {
+                    params.keyword = state.keyword.trim()
+                }
+                const res: any = await httpFetchMailList(params)
                 const data = res.data ?? res
                 await setState({ list: data.list ?? [], total: data.total ?? 0 })
             } catch (err) {
@@ -49,6 +63,15 @@ export default defineComponent({
             } finally {
                 await setState({ loading: false })
             }
+        }
+
+        function handleSearch(keyword: string) {
+            if (searchTimer.value) {
+                clearTimeout(searchTimer.value)
+            }
+            searchTimer.value = setTimeout(() => {
+                setState({ keyword, page: 1 }).then(() => fetchList())
+            }, 300)
         }
 
         async function handleMarkAllSeen() {
@@ -137,7 +160,18 @@ export default defineComponent({
                             </n-tag>
                         )}
                     </div>
-                    <div class="flex gap-8">
+                    <div class="flex gap-8 items-center">
+                        <n-input
+                            placeholder="搜索邮件..."
+                            clearable
+                            style={{ width: '240px' }}
+                            v-model:value={state.keyword}
+                            onUpdate:value={handleSearch}
+                        >
+                            {{
+                                prefix: () => <i class="i-carbon-search text-16 opacity-50"></i>
+                            }}
+                        </n-input>
                         <n-button size="small" type="primary" secondary round loading={syncing.value} onClick={handleSync}>
                             {syncing.value ? '同步中...' : '🔄 同步'}
                         </n-button>
@@ -145,19 +179,18 @@ export default defineComponent({
                         <n-button size="small" secondary round onClick={() => fetchList()}>🔃 刷新</n-button>
                     </div>
                 </div>
-                <div class="mail-table-wrap flex-1 overflow-hidden">
-                    <n-data-table
-                        columns={columns}
-                        data={state.list}
-                        row-key={(row: any) => row.keyId}
-                        bordered={false}
-                        striped
-                        flex-height
-                        class="flex-1"
-                        loading={state.loading}
-                        row-class-name={(row: any) => row.seen ? '' : 'font-bold'}
-                    />
-                </div>
+                <n-data-table
+                    columns={columns}
+                    data={state.list}
+                    row-key={(row: any) => row.keyId}
+                    bordered={false}
+                    striped
+                    flex-height
+                    loading={state.loading}
+                    row-class-name={(row: any) => row.seen ? '' : 'font-bold'}
+                    style={{ flex: 1, cursor: 'pointer' }}
+                    on-update:expanded-row-keys={(keys: string[]) => keys.length > 0 && handleRowClick(state.list.find((m: any) => m.keyId === keys[0]))}
+                />
                 <div class="flex justify-end">
                     <n-pagination
                         v-model:page={state.page}

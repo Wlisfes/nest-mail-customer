@@ -55,6 +55,11 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         component: () => import('@/views/manager/pages/manager-settings.vue')
                     },
                     {
+                        path: '/manager/mail/:id',
+                        meta: { AUTH: 'AUTH' },
+                        component: () => import('@/views/manager/pages/manager-mail-detail.vue')
+                    },
+                    {
                         path: '/:pathMatch(.*)*',
                         meta: { AUTH: 'NONE' },
                         component: () => import('@/views/error/404.vue')

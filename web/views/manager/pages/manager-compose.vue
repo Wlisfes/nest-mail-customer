@@ -1,10 +1,14 @@
 <script lang="tsx">
-import { defineComponent, onMounted, ref, shallowRef } from 'vue'
+import { defineComponent, onMounted, ref, shallowRef, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { httpFetchMailAccounts, httpSendMail, httpSaveDraft, httpFetchMailDetail } from '@/api'
 import { $message, $dialog } from '@/utils'
 import { useState } from '@/hooks'
+import { useStore, useMouse } from '@/store'
 import { NButton, NTag, NDropdown, NSelect } from 'naive-ui'
+import { getEditorConfig } from '../components/ckeditor-config'
+import 'ckeditor5/ckeditor5.css'
+import '@/assets/ckeditor-dark.css'
 
 // 邮件模板
 const MAIL_TEMPLATES = [
@@ -84,7 +88,12 @@ export default defineComponent({
         const route = useRoute()
         const router = useRouter()
         const editorReady = ref(false)
-        const EditorComponent = shallowRef<any>(null)
+        const CKEditorComponent = shallowRef<any>(null)
+        const ClassicEditorRef = shallowRef<any>(null)
+        const editorInstance = shallowRef<any>(null)
+        const isFullscreen = ref(false)
+        const { inverted } = useStore(useMouse)
+        const isDark = computed(() => inverted.value)
 
         const { state, setState } = useState({
             loading: false,
@@ -104,37 +113,15 @@ export default defineComponent({
         })
 
         onMounted(async () => {
-            // 动态导入 TinyMCE（仅客户端）
+            // 动态导入 CKEditor（仅客户端）
             if (typeof window !== 'undefined') {
                 try {
-                    const tinymce = await import('tinymce/tinymce')
-                    // 设置许可证（必须在加载主题/插件之前）
-                    if (tinymce.default) {
-                        tinymce.default.overrideDefaults({ license_key: 'gpl', promotion: false })
-                    }
-                    await import('tinymce/themes/silver')
-                    await import('tinymce/icons/default')
-                    await import('tinymce/models/dom')
-                    // 皮肤 CSS
-                    await import('tinymce/skins/ui/oxide/skin.min.css')
-                    await import('tinymce/skins/content/default/content.min.css')
-                    // 加载插件
-                    await import('tinymce/plugins/lists')
-                    await import('tinymce/plugins/link')
-                    await import('tinymce/plugins/image')
-                    await import('tinymce/plugins/table')
-                    await import('tinymce/plugins/code')
-                    await import('tinymce/plugins/wordcount')
-                    await import('tinymce/plugins/preview')
-                    await import('tinymce/plugins/fullscreen')
-                    await import('tinymce/plugins/autolink')
-                    await import('tinymce/plugins/charmap')
-
-                    const tinymceVue = await import('@tinymce/tinymce-vue')
-                    EditorComponent.value = tinymceVue.default
+                    const [ckeditorVue, ckeditorCore] = await Promise.all([import('@ckeditor/ckeditor5-vue'), import('ckeditor5')])
+                    CKEditorComponent.value = ckeditorVue.Ckeditor
+                    ClassicEditorRef.value = ckeditorCore.ClassicEditor
                     editorReady.value = true
                 } catch (err) {
-                    console.error('TinyMCE 加载失败', err)
+                    console.error('CKEditor 加载失败', err)
                 }
             }
 
@@ -429,47 +416,21 @@ ${mail.htmlBody || mail.textBody || ''}
 
         const currentSenderEmail = () => state.accounts.find(a => a.value === state.accountId)?.email ?? ''
 
-        // TinyMCE 配置
-        const tinymceInit = {
-            height: '100%',
-            menubar: false,
-            branding: false,
-            statusbar: true,
-            elementpath: false,
-            resize: false,
-            placeholder: '请输入邮件正文...',
-            plugins: 'lists link image table code wordcount preview fullscreen autolink charmap',
-            toolbar: [
-                'undo redo | bold italic underline strikethrough | forecolor backcolor | fontsize',
-                'alignleft aligncenter alignright alignjustify | bullist numlist | blockquote link image table | charmap code fullscreen'
-            ],
-            font_size_formats: '12px 13px 14px 15px 16px 18px 20px 24px 28px 32px 36px',
-            content_style: `
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                    font-size: 14px;
-                    line-height: 1.6;
-                    color: #333;
-                    padding: 12px 16px;
-                    margin: 0;
-                }
-                p { margin: 0 0 8px 0; }
-                blockquote {
-                    border-left: 3px solid #6366f1;
-                    padding-left: 12px;
-                    margin: 0 0 8px 0;
-                    color: #666;
-                }
-                table { border-collapse: collapse; width: 100%; }
-                table td, table th { border: 1px solid #ddd; padding: 8px; }
-                a { color: #6366f1; }
-                img { max-width: 100%; height: auto; }
-            `,
-            skin: false,
-            content_css: false,
-            promotion: false,
-            license_key: 'gpl',
-            base_url: '/tinymce'
+        // CKEditor 配置
+        const editorConfig = getEditorConfig()
+
+        // 编辑器就绪回调
+        function onEditorReady(editor: any) {
+            editorInstance.value = editor
+            // 初始内容加载（回复/转发场景）
+            if (state.html && editor.getData() !== state.html) {
+                editor.setData(state.html)
+            }
+        }
+
+        // 全屏切换
+        function toggleFullscreen() {
+            isFullscreen.value = !isFullscreen.value
         }
 
         return () => (
@@ -569,17 +530,38 @@ ${mail.htmlBody || mail.textBody || ''}
                     </div>
                 </div>
 
-                {/* ===== TinyMCE 编辑器 ===== */}
-                <div class="compose-editor-wrap">
-                    {editorReady.value && EditorComponent.value ? (
-                        <EditorComponent.value
+                {/* ===== CKEditor 编辑器 ===== */}
+                <div
+                    class={[
+                        'compose-editor-wrap',
+                        isDark.value ? 'ck-dark-theme' : '',
+                        isFullscreen.value ? 'compose-editor-fullscreen' : ''
+                    ]}
+                >
+                    {isFullscreen.value && (
+                        <div class="compose-fullscreen-bar">
+                            <span>全屏编辑</span>
+                            <NButton text type="primary" size="small" onClick={toggleFullscreen}>
+                                退出全屏
+                            </NButton>
+                        </div>
+                    )}
+                    {editorReady.value && CKEditorComponent.value && ClassicEditorRef.value ? (
+                        <CKEditorComponent.value
+                            editor={ClassicEditorRef.value}
                             modelValue={state.html}
                             onUpdate:modelValue={(val: string) => setState({ html: val })}
-                            init={tinymceInit}
+                            config={editorConfig}
+                            onReady={onEditorReady}
                         />
                     ) : (
                         <div class="compose-editor-loading">
                             <span>编辑器加载中...</span>
+                        </div>
+                    )}
+                    {!isFullscreen.value && (
+                        <div class="compose-fullscreen-toggle" onClick={toggleFullscreen} title="全屏编辑">
+                            ⛶
                         </div>
                     )}
                 </div>
@@ -760,31 +742,89 @@ ${mail.htmlBody || mail.textBody || ''}
     }
 }
 
-/* ===== TinyMCE 编辑器 ===== */
+/* ===== CKEditor 编辑器 ===== */
 .compose-editor-wrap {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
 
-    :deep(.tox-tinymce) {
-        border: none !important;
-        border-top: 1px solid var(--border-color) !important;
-        border-radius: 0 !important;
+    :deep(.ck-editor) {
+        display: flex;
+        flex-direction: column;
         flex: 1;
+        overflow: hidden;
     }
 
-    :deep(.tox-editor-header) {
-        border-bottom: 1px solid var(--border-color) !important;
+    :deep(.ck-editor__top) {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    :deep(.ck-toolbar) {
+        border: none !important;
+        border-radius: 0 !important;
+    }
+
+    :deep(.ck-editor__main) {
+        flex: 1;
+        overflow: auto;
+    }
+
+    :deep(.ck-editor__editable) {
+        border: none !important;
+        border-radius: 0 !important;
+        min-height: 300px;
+        padding: 16px 24px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    :deep(.ck-editor__editable:focus) {
         box-shadow: none !important;
     }
+}
 
-    :deep(.tox-toolbar__primary) {
-        background: transparent !important;
-    }
+.compose-editor-fullscreen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: var(--body-color, #fff);
+}
 
-    :deep(.tox-statusbar) {
-        border-top: 1px solid var(--border-color) !important;
+.compose-fullscreen-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.compose-fullscreen-toggle {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0.4;
+    transition:
+        opacity 0.2s,
+        background 0.2s;
+    &:hover {
+        opacity: 1;
+        background: var(--hover-color);
     }
 }
 

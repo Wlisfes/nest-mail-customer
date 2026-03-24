@@ -1,0 +1,189 @@
+/**
+ * CKEditor 5 暗黑主题
+ * 通过覆盖 CSS 自定义属性实现完整暗黑模式
+ * 使用方式：在编辑器容器上添加 .ck-dark-theme 类
+ */
+
+/* ===== 暗黑主题变量覆盖 ===== */
+.ck-dark-theme {
+    /* 基础色 */
+    --ck-color-base-background: #1e1e2e;
+    --ck-color-base-foreground: #2a2a3c;
+    --ck-color-base-border: #3a3a4c;
+    --ck-color-base-text: rgba(255, 255, 255, 0.82);
+    --ck-color-base-active: #6366f1;
+    --ck-color-base-active-focus: #818cf8;
+    --ck-color-base-error: #ef4444;
+
+    /* 工具栏 */
+    --ck-color-toolbar-background: #252536;
+    --ck-color-toolbar-border: #3a3a4c;
+
+    /* 按钮 */
+    --ck-color-button-default-background: transparent;
+    --ck-color-button-default-hover-background: #3a3a4c;
+    --ck-color-button-default-active-background: #4a4a5c;
+    --ck-color-button-default-disabled-background: transparent;
+
+    --ck-color-button-on-background: #3a3a50;
+    --ck-color-button-on-hover-background: #4a4a60;
+    --ck-color-button-on-active-background: #5a5a70;
+    --ck-color-button-on-disabled-background: #2a2a3c;
+    --ck-color-button-on-color: #e2e8f0;
+
+    --ck-color-button-action-background: #6366f1;
+    --ck-color-button-action-hover-background: #818cf8;
+    --ck-color-button-action-active-background: #4f46e5;
+    --ck-color-button-action-text: #fff;
+
+    --ck-color-button-save: #10b981;
+    --ck-color-button-cancel: #ef4444;
+
+    /* 下拉面板 */
+    --ck-color-dropdown-panel-background: #2a2a3c;
+    --ck-color-dropdown-panel-border: #3a3a4c;
+
+    /* 输入框 */
+    --ck-color-input-background: #1e1e2e;
+    --ck-color-input-border: #3a3a4c;
+    --ck-color-input-text: rgba(255, 255, 255, 0.82);
+    --ck-color-input-disabled-background: #252536;
+    --ck-color-input-disabled-border: #3a3a4c;
+    --ck-color-input-disabled-text: rgba(255, 255, 255, 0.3);
+
+    /* 列表 */
+    --ck-color-list-background: #2a2a3c;
+    --ck-color-list-button-hover-background: #3a3a4c;
+    --ck-color-list-button-on-background: #6366f1;
+    --ck-color-list-button-on-background-focus: #818cf8;
+    --ck-color-list-button-on-text: #fff;
+
+    /* 面板 */
+    --ck-color-panel-background: #2a2a3c;
+    --ck-color-panel-border: #3a3a4c;
+
+    /* 文本 */
+    --ck-color-text: rgba(255, 255, 255, 0.82);
+
+    /* 焦点 */
+    --ck-color-focus-border: #6366f1;
+    --ck-focus-ring: 1px solid #818cf8;
+    --ck-color-focus-outer-shadow: rgba(99, 102, 241, 0.3);
+    --ck-color-focus-disabled-shadow: rgba(99, 102, 241, 0.1);
+
+    /* 阴影 */
+    --ck-color-shadow-drop: rgba(0, 0, 0, 0.4);
+    --ck-color-shadow-inner: rgba(0, 0, 0, 0.2);
+    --ck-color-shadow-drop-active: rgba(0, 0, 0, 0.5);
+
+    /* 标签/徽章 */
+    --ck-color-labeled-field-label-background: #2a2a3c;
+
+    /* 分隔线 */
+    --ck-color-split-button-hover-background: #3a3a4c;
+    --ck-color-split-button-hover-border: #4a4a5c;
+
+    /* Tooltip */
+    --ck-color-tooltip-background: #1e1e2e;
+    --ck-color-tooltip-text: rgba(255, 255, 255, 0.82);
+
+    /* 编辑区域 */
+    --ck-color-editor-base-text: rgba(255, 255, 255, 0.82);
+
+    /* Widget */
+    --ck-color-widget-blurred-border: #3a3a4c;
+    --ck-color-widget-hover-border: #6366f1;
+    --ck-color-widget-editable-focus-background: #1e1e2e;
+
+    /* 表格 */
+    --ck-color-table-focused-cell-background: rgba(99, 102, 241, 0.1);
+}
+
+/* ===== 编辑区域暗黑适配 ===== */
+.ck-dark-theme .ck-editor__editable {
+    background: #1e1e2e !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.ck-dark-theme .ck-editor__editable:focus {
+    border-color: #6366f1 !important;
+}
+
+/* 编辑区域内元素样式 */
+.ck-dark-theme .ck-editor__editable a {
+    color: #818cf8;
+}
+
+.ck-dark-theme .ck-editor__editable blockquote {
+    border-left-color: #6366f1;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.ck-dark-theme .ck-editor__editable table td,
+.ck-dark-theme .ck-editor__editable table th {
+    border-color: #3a3a4c;
+}
+
+.ck-dark-theme .ck-editor__editable table th {
+    background: #252536;
+}
+
+.ck-dark-theme .ck-editor__editable hr {
+    border-color: #3a3a4c;
+}
+
+/* 占位符文字颜色 */
+.ck-dark-theme .ck-editor__editable.ck-placeholder::before {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 源码编辑模式 */
+.ck-dark-theme .ck-source-editing-area textarea {
+    background: #1e1e2e !important;
+    color: #a5f3fc !important;
+    border-color: #3a3a4c !important;
+}
+
+/* ===== 按钮图标颜色适配 ===== */
+.ck-dark-theme .ck.ck-button .ck-icon,
+.ck-dark-theme .ck.ck-button .ck-button__label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.ck-dark-theme .ck.ck-button:hover .ck-icon,
+.ck-dark-theme .ck.ck-button:hover .ck-button__label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.ck-dark-theme .ck.ck-button.ck-on .ck-icon,
+.ck-dark-theme .ck.ck-button.ck-on .ck-button__label {
+    color: #fff;
+}
+
+/* 下拉箭头 */
+.ck-dark-theme .ck.ck-dropdown .ck-dropdown__arrow {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ===== 分隔线颜色 ===== */
+.ck-dark-theme .ck.ck-toolbar .ck-toolbar__separator {
+    background: #3a3a4c;
+}
+
+/* ===== 滚动条 ===== */
+.ck-dark-theme .ck-editor__editable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ck-dark-theme .ck-editor__editable::-webkit-scrollbar-track {
+    background: #1e1e2e;
+}
+
+.ck-dark-theme .ck-editor__editable::-webkit-scrollbar-thumb {
+    background: #3a3a4c;
+    border-radius: 3px;
+}
+
+.ck-dark-theme .ck-editor__editable::-webkit-scrollbar-thumb:hover {
+    background: #4a4a5c;
+}

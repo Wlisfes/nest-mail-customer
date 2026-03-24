@@ -8,6 +8,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { NButton, type DataTableColumns } from 'naive-ui'
+import { renderMailAvatar } from '../components/mail-avatar.vue'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -27,8 +28,11 @@ export default defineComponent({
                 const res: any = await httpFetchDrafts()
                 const data = res.data ?? res
                 await setState({ list: Array.isArray(data) ? data : (data.list ?? []) })
-            } catch (err) { console.error(err) }
-            finally { await setState({ loading: false }) }
+            } catch (err) {
+                console.error(err)
+            } finally {
+                await setState({ loading: false })
+            }
         }
 
         async function handleDelete(keyId: number) {
@@ -36,7 +40,9 @@ export default defineComponent({
                 await httpDeleteDraft(keyId)
                 $message.success('草稿已删除')
                 await fetchList()
-            } catch (err) { console.error(err) }
+            } catch (err) {
+                console.error(err)
+            }
         }
 
         onMounted(fetchList)
@@ -49,10 +55,7 @@ export default defineComponent({
                 render: (row: any) => {
                     const addr = row.toAddress ?? '未指定'
                     return h('div', { class: 'flex items-center gap-10' }, [
-                        h('div', {
-                            class: 'mail-sender-avatar',
-                            style: { background: 'linear-gradient(135deg, #f59e0b, #fbbf24)' }
-                        }, addr.charAt(0).toUpperCase()),
+                        renderMailAvatar(addr),
                         h('span', { style: { fontWeight: 500 } }, addr)
                     ])
                 }
@@ -67,22 +70,38 @@ export default defineComponent({
                 title: '保存时间',
                 key: 'createTime',
                 width: 140,
-                render: (row: any) => row.createTime ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.createTime).fromNow()) : ''
+                render: (row: any) =>
+                    row.createTime ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.createTime).fromNow()) : ''
             },
             {
                 title: '操作',
                 key: 'actions',
                 width: 140,
-                render: (row: any) => h('div', { class: 'flex gap-6' }, [
-                    h(NButton, {
-                        size: 'small', type: 'info', secondary: true, round: true,
-                        onClick: () => router.push('/manager/compose')
-                    }, () => '✏️ 编辑'),
-                    h(NButton, {
-                        size: 'small', type: 'error', secondary: true, round: true,
-                        onClick: () => handleDelete(row.keyId)
-                    }, () => '🗑️')
-                ])
+                render: (row: any) =>
+                    h('div', { class: 'flex gap-6' }, [
+                        h(
+                            NButton,
+                            {
+                                size: 'small',
+                                type: 'info',
+                                secondary: true,
+                                round: true,
+                                onClick: () => router.push('/manager/compose')
+                            },
+                            () => '✏️ 编辑'
+                        ),
+                        h(
+                            NButton,
+                            {
+                                size: 'small',
+                                type: 'error',
+                                secondary: true,
+                                round: true,
+                                onClick: () => handleDelete(row.keyId)
+                            },
+                            () => '🗑️'
+                        )
+                    ])
             }
         ]
 
@@ -90,7 +109,9 @@ export default defineComponent({
             <n-element class="page-container animate-fadeInUp">
                 <div class="page-header">
                     <div class="flex items-center gap-12">
-                        <n-text class="text-22" style={{ fontWeight: 800 }}>📝 草稿箱</n-text>
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>
+                            📝 草稿箱
+                        </n-text>
                         <n-tag size="small" round bordered={false} type="warning">
                             {state.list.length} 封
                         </n-tag>

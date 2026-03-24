@@ -8,24 +8,10 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { NButton, NTag, NInput, type DataTableColumns } from 'naive-ui'
+import { renderMailAvatar } from '../components/mail-avatar.vue'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
-
-const avatarGradients = [
-    'linear-gradient(135deg, #6366f1, #8b5cf6)',
-    'linear-gradient(135deg, #10b981, #34d399)',
-    'linear-gradient(135deg, #f59e0b, #fbbf24)',
-    'linear-gradient(135deg, #ef4444, #f87171)',
-    'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-    'linear-gradient(135deg, #06b6d4, #22d3ee)'
-]
-
-function hashColor(str: string) {
-    let hash = 0
-    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-    return avatarGradients[Math.abs(hash) % avatarGradients.length]
-}
 
 export default defineComponent({
     name: 'ManagerInbox',
@@ -100,7 +86,10 @@ export default defineComponent({
         }
 
         onMounted(() => fetchList())
-        watch(() => state.page, () => fetchList())
+        watch(
+            () => state.page,
+            () => fetchList()
+        )
 
         const unreadCount = () => state.list.filter((m: any) => !m.seen).length
 
@@ -112,10 +101,7 @@ export default defineComponent({
                 render: (row: any) => {
                     const name = row.fromAddress?.split('@')[0] ?? '?'
                     return h('div', { class: 'flex items-center gap-10' }, [
-                        h('div', {
-                            class: 'mail-sender-avatar',
-                            style: { background: hashColor(row.fromAddress ?? '') }
-                        }, name.charAt(0).toUpperCase()),
+                        renderMailAvatar(row.fromAddress ?? ''),
                         h('div', { class: 'flex flex-col' }, [
                             h('span', { style: { fontWeight: row.seen ? 400 : 700, fontSize: '13px' } }, name),
                             h('span', { style: { fontSize: '11px', opacity: 0.5 } }, row.fromAddress)
@@ -134,13 +120,13 @@ export default defineComponent({
                 key: 'hasAttachment',
                 width: 60,
                 align: 'center',
-                render: (row: any) => row.hasAttachment ? h(NTag, { size: 'small', bordered: false, round: true }, () => '📎') : null
+                render: (row: any) => (row.hasAttachment ? h(NTag, { size: 'small', bordered: false, round: true }, () => '📎') : null)
             },
             {
                 title: '时间',
                 key: 'date',
                 width: 140,
-                render: (row: any) => row.date ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.date).fromNow()) : ''
+                render: (row: any) => (row.date ? h('span', { style: { fontSize: '12px', opacity: 0.7 } }, dayjs(row.date).fromNow()) : '')
             }
         ]
 
@@ -148,7 +134,9 @@ export default defineComponent({
             <n-element class="page-container animate-fadeInUp">
                 <div class="page-header">
                     <div class="flex items-center gap-12">
-                        <n-text class="text-22" style={{ fontWeight: 800 }}>📥 收件箱</n-text>
+                        <n-text class="text-22" style={{ fontWeight: 800 }}>
+                            📥 收件箱
+                        </n-text>
                         {state.total > 0 && (
                             <n-tag size="small" round bordered={false} type="info">
                                 {state.total} 封
@@ -175,8 +163,12 @@ export default defineComponent({
                         <n-button size="small" type="primary" secondary round loading={syncing.value} onClick={handleSync}>
                             {syncing.value ? '同步中...' : '🔄 同步'}
                         </n-button>
-                        <n-button size="small" secondary round onClick={handleMarkAllSeen}>✅ 全部已读</n-button>
-                        <n-button size="small" secondary round onClick={() => fetchList()}>🔃 刷新</n-button>
+                        <n-button size="small" secondary round onClick={handleMarkAllSeen}>
+                            ✅ 全部已读
+                        </n-button>
+                        <n-button size="small" secondary round onClick={() => fetchList()}>
+                            🔃 刷新
+                        </n-button>
                     </div>
                 </div>
                 <n-data-table
@@ -187,16 +179,14 @@ export default defineComponent({
                     striped
                     flex-height
                     loading={state.loading}
-                    row-class-name={(row: any) => row.seen ? '' : 'font-bold'}
+                    row-class-name={(row: any) => (row.seen ? '' : 'font-bold')}
                     style={{ flex: 1, cursor: 'pointer' }}
-                    on-update:expanded-row-keys={(keys: string[]) => keys.length > 0 && handleRowClick(state.list.find((m: any) => m.keyId === keys[0]))}
+                    on-update:expanded-row-keys={(keys: string[]) =>
+                        keys.length > 0 && handleRowClick(state.list.find((m: any) => m.keyId === keys[0]))
+                    }
                 />
                 <div class="flex justify-end">
-                    <n-pagination
-                        v-model:page={state.page}
-                        page-count={Math.ceil(state.total / state.size) || 1}
-                        show-quick-jumper
-                    />
+                    <n-pagination v-model:page={state.page} page-count={Math.ceil(state.total / state.size) || 1} show-quick-jumper />
                 </div>
             </n-element>
         )

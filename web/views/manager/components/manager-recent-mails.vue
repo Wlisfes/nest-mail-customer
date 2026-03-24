@@ -5,6 +5,8 @@ import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
+import MailAvatar from './mail-avatar.vue'
+import { hashColor } from './mail-avatar.vue'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -12,15 +14,6 @@ dayjs.locale('zh-cn')
 export default defineComponent({
     name: 'ManagerRecentMails',
     setup() {
-        const gradients = [
-            'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            'linear-gradient(135deg, #10b981, #34d399)',
-            'linear-gradient(135deg, #f59e0b, #fbbf24)',
-            'linear-gradient(135deg, #ef4444, #f87171)',
-            'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-            'linear-gradient(135deg, #06b6d4, #22d3ee)'
-        ]
-
         const { state, setState } = useState({
             mails: [] as Array<{
                 id: number
@@ -48,7 +41,7 @@ export default defineComponent({
                         time: item.date ? dayjs(item.date).format('MM/DD HH:mm') : '',
                         relativeTime: item.date ? dayjs(item.date).fromNow() : '',
                         unread: !item.seen,
-                        gradient: gradients[i % gradients.length]
+                        gradient: hashColor(item.fromAddress ?? '')
                     }))
                 })
             } catch (err) {
@@ -59,7 +52,9 @@ export default defineComponent({
         return () => (
             <n-card hoverable content-class="p-20!" class="animate-fadeInUp animate-stagger-4" style={{ borderRadius: '16px' }}>
                 <div class="flex items-center justify-between m-be-8">
-                    <n-text class="text-16" style={{ fontWeight: 700 }}>最近邮件</n-text>
+                    <n-text class="text-16" style={{ fontWeight: 700 }}>
+                        最近邮件
+                    </n-text>
                     <n-button text type="primary" focusable={false} size="small" style={{ fontWeight: 600 }}>
                         查看全部 →
                     </n-button>
@@ -74,27 +69,22 @@ export default defineComponent({
                     {state.mails.map((mail, index) => (
                         <div
                             key={mail.id}
-                            class={['manager-recent-mail-item flex items-center gap-12 animate-slideInLeft', `animate-stagger-${index + 1}`]}
+                            class={[
+                                'manager-recent-mail-item flex items-center gap-12 animate-slideInLeft',
+                                `animate-stagger-${index + 1}`
+                            ]}
                         >
-                            <div class="mail-avatar" style={{ background: mail.gradient }}>
-                                {mail.sender.charAt(0).toUpperCase()}
-                            </div>
+                            <MailAvatar email={mail.email} size={42} gradient={mail.gradient} />
                             <div class="flex flex-col flex-1 overflow-hidden">
                                 <div class="flex items-center gap-8">
-                                    <n-text
-                                        class="text-14 truncate flex-1"
-                                        style={{ fontWeight: mail.unread ? 700 : 400 }}
-                                    >
+                                    <n-text class="text-14 truncate flex-1" style={{ fontWeight: mail.unread ? 700 : 400 }}>
                                         {mail.sender}
                                     </n-text>
                                     <n-text depth={3} class="text-11 flex-shrink-0" style={{ opacity: 0.7 }}>
                                         {mail.relativeTime}
                                     </n-text>
                                 </div>
-                                <n-text
-                                    depth={mail.unread ? 1 : 3}
-                                    class="text-13 truncate"
-                                >
+                                <n-text depth={mail.unread ? 1 : 3} class="text-13 truncate">
                                     {mail.subject}
                                 </n-text>
                             </div>

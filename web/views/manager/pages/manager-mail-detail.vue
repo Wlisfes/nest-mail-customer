@@ -6,6 +6,7 @@ import { $message, $dialog } from '@/utils'
 import dayjs from 'dayjs'
 import { useState } from '@/hooks'
 import { NButton, NTag, NSkeleton, NEmpty } from 'naive-ui'
+import MailAvatar from '../components/mail-avatar.vue'
 
 export default defineComponent({
     name: 'ManagerMailDetail',
@@ -160,20 +161,13 @@ export default defineComponent({
 
                         {/* Sender Info */}
                         <div class="mail-header">
-                            <div class="mail-sender-avatar-large" 
-                                 style={{ background: `linear-gradient(135deg, #6366f1, #8b5cf6)` }}>
-                                {state.mail.fromAddress?.charAt(0).toUpperCase() || '?'}
-                            </div>
+                            <MailAvatar email={state.mail.fromAddress ?? ''} size={48} />
                             <div class="mail-sender-info">
-                                <div class="mail-sender-name">
-                                    {state.mail.fromName || state.mail.fromAddress?.split('@')[0]}
-                                </div>
+                                <div class="mail-sender-name">{state.mail.fromName || state.mail.fromAddress?.split('@')[0]}</div>
                                 <div class="mail-sender-address">{state.mail.fromAddress}</div>
                                 <div class="mail-meta">
                                     <span>发送至: {state.mail.toAddress}</span>
-                                    <span class="mail-time">
-                                        {dayjs(state.mail.date).format('YYYY年MM月DD日 HH:mm')}
-                                    </span>
+                                    <span class="mail-time">{dayjs(state.mail.date).format('YYYY年MM月DD日 HH:mm')}</span>
                                 </div>
                             </div>
                         </div>
@@ -189,12 +183,14 @@ export default defineComponent({
                                     {state.mail.attachments.map((att: any) => (
                                         <div class="attachment-item" key={att.keyId || att.filename}>
                                             <i class="i-carbon-document text-20"></i>
-                                            <span class="attachment-name" title={att.filename}>{att.filename}</span>
+                                            <span class="attachment-name" title={att.filename}>
+                                                {att.filename}
+                                            </span>
                                             <span class="attachment-size">{formatSize(att.size)}</span>
                                             <div class="attachment-actions">
-                                                <n-button 
-                                                    text 
-                                                    type="primary" 
+                                                <n-button
+                                                    text
+                                                    type="primary"
                                                     size="small"
                                                     onClick={() => handleDownload(att.keyId, att.filename)}
                                                 >
@@ -202,9 +198,9 @@ export default defineComponent({
                                                     下载
                                                 </n-button>
                                                 {isPreviewable(att.mimeType) && (
-                                                    <n-button 
-                                                        text 
-                                                        type="info" 
+                                                    <n-button
+                                                        text
+                                                        type="info"
                                                         size="small"
                                                         style={{ marginLeft: '8px' }}
                                                         onClick={() => handlePreview(att.keyId)}
@@ -221,8 +217,10 @@ export default defineComponent({
                         )}
 
                         {/* Body */}
-                        <div class="mail-body" v-html={state.mail.htmlBody || state.mail.textBody || '<p style="color: #999;">(无内容)</p>'}>
-                        </div>
+                        <div
+                            class="mail-body"
+                            v-html={state.mail.htmlBody || state.mail.textBody || '<p style="color: #999;">(无内容)</p>'}
+                        ></div>
                     </div>
                 ) : (
                     <n-empty description="邮件不存在或已被删除" />
@@ -258,19 +256,6 @@ export default defineComponent({
     padding-bottom: 24px;
     border-bottom: 1px solid var(--divider-color);
     margin-bottom: 24px;
-}
-
-.mail-sender-avatar-large {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    font-weight: 700;
-    color: #fff;
-    flex-shrink: 0;
 }
 
 .mail-sender-info {
@@ -405,7 +390,8 @@ export default defineComponent({
         border-collapse: collapse;
         margin: 16px 0;
 
-        th, td {
+        th,
+        td {
             border: 1px solid var(--divider-color);
             padding: 8px 12px;
             text-align: left;

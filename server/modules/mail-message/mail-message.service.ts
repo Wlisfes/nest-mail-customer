@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common'
 import { Logger, AutoDescriptor } from '@server/modules/logger/logger.service'
 import { DatabaseService } from '@server/modules/database/database.service'
 import * as dto from '@server/interface'
+import * as schema from '@server/modules/database/database.schema'
 
 @Injectable()
 export class MailMessageService extends Logger {
@@ -54,27 +55,24 @@ export class MailMessageService extends Logger {
             /**记录已发送邮件**/
             const ctx = await this.database.transaction()
             try {
-                await this.database.create(
-                    ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailMessage),
-                    {
-                        stack: this.stack,
-                        request,
-                        body: {
-                            accountId: account.keyId,
-                            folder: 'Sent',
-                            subject: body.subject,
-                            fromAddress: account.email,
-                            toAddress: body.to,
-                            ccAddress: body.cc || '',
-                            bccAddress: body.bcc || '',
-                            htmlBody: body.html,
-                            hasAttachment: body.attachments && body.attachments.length > 0 ? 1 : 0,
-                            date: new Date(),
-                            seen: 1,
-                            uid: 0
-                        }
+                await this.database.create(ctx.manager.getRepository(schema.SchemaMailMessage), {
+                    stack: this.stack,
+                    request,
+                    body: {
+                        accountId: account.keyId,
+                        folder: 'Sent',
+                        subject: body.subject,
+                        fromAddress: account.email,
+                        toAddress: body.to,
+                        ccAddress: body.cc || '',
+                        bccAddress: body.bcc || '',
+                        htmlBody: body.html,
+                        hasAttachment: body.attachments && body.attachments.length > 0 ? 1 : 0,
+                        date: new Date(),
+                        seen: 1,
+                        uid: 0
                     }
-                )
+                })
                 await ctx.commitTransaction()
             } catch (err) {
                 await ctx.rollbackTransaction()
@@ -119,11 +117,11 @@ export class MailMessageService extends Logger {
             const attachments = await this.database.schemaMailAttachment.find({
                 where: { messageId: parseInt(keyId) }
             })
-            return await this.fetchResolver({ 
-                data: { 
-                    ...mail, 
-                    attachments: attachments || [] 
-                } 
+            return await this.fetchResolver({
+                data: {
+                    ...mail,
+                    attachments: attachments || []
+                }
             })
         } catch (err) {
             this.logger.error(err)

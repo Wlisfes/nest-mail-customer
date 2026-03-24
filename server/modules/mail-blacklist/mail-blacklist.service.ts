@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common'
 import { Logger, AutoDescriptor } from '@server/modules/logger/logger.service'
 import { DatabaseService } from '@server/modules/database/database.service'
 import * as dto from '@server/interface'
+import * as schema from '@server/modules/database/database.schema'
 
 @Injectable()
 export class MailBlacklistService extends Logger {
@@ -24,7 +25,7 @@ export class MailBlacklistService extends Logger {
                     return node
                 })
             })
-            await this.database.create(ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailBlacklist), {
+            await this.database.create(ctx.manager.getRepository(schema.SchemaMailBlacklist), {
                 stack: this.stack,
                 request,
                 body: { ...body, userId: request.user.keyId }

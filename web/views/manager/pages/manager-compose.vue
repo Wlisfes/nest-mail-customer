@@ -5,10 +5,8 @@ import { httpFetchMailAccounts, httpSendMail, httpSaveDraft, httpFetchMailDetail
 import { $message, $dialog } from '@/utils'
 import { useState } from '@/hooks'
 import { useStore, useMouse } from '@/store'
-import { NButton, NTag, NDropdown, NSelect } from 'naive-ui'
+import type { UploadFileInfo } from 'naive-ui'
 import { getEditorConfig } from '../components/ckeditor-config'
-import 'ckeditor5/ckeditor5.css'
-import '@/assets/ckeditor-dark.css'
 
 // 邮件模板
 const MAIL_TEMPLATES = [
@@ -91,6 +89,7 @@ export default defineComponent({
         const CKEditorComponent = shallowRef<any>(null)
         const ClassicEditorRef = shallowRef<any>(null)
         const editorInstance = shallowRef<any>(null)
+        const editorConfig = shallowRef<any>(null)
         const isFullscreen = ref(false)
         const { inverted } = useStore(useMouse)
         const isDark = computed(() => inverted.value)
@@ -116,9 +115,18 @@ export default defineComponent({
             // 动态导入 CKEditor（仅客户端）
             if (typeof window !== 'undefined') {
                 try {
-                    const [ckeditorVue, ckeditorCore] = await Promise.all([import('@ckeditor/ckeditor5-vue'), import('ckeditor5')])
+                    // 动态加载 CSS（避免 SSR 报错）
+                    await import('ckeditor5/ckeditor5.css')
+                    await import('@/assets/ckeditor-dark.css')
+
+                    const [ckeditorVue, ckeditorCore, config] = await Promise.all([
+                        import('@ckeditor/ckeditor5-vue'),
+                        import('ckeditor5'),
+                        getEditorConfig()
+                    ])
                     CKEditorComponent.value = ckeditorVue.Ckeditor
                     ClassicEditorRef.value = ckeditorCore.ClassicEditor
+                    editorConfig.value = config
                     editorReady.value = true
                 } catch (err) {
                     console.error('CKEditor 加载失败', err)
@@ -206,33 +214,28 @@ ${mail.htmlBody || mail.textBody || ''}
         // 移除收件人
         function removeRecipient(type: 'to' | 'cc' | 'bcc', email: string) {
             const list = type === 'to' ? state.to : type === 'cc' ? state.cc : state.bcc
-            const index = list.indexOf(email)
-            if (index > -1) {
-                list.splice(index, 1)
-                setState({ [type]: [...list] })
-            }
+            const filtered = list.filter(e => e !== email)
+            setState({ [type]: filtered })
         }
 
         // 处理附件上传
-        function handleFileSelect(e: Event) {
-            const input = e.target as HTMLInputElement
-            const files = input.files
-            if (!files) return
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]
-                if (file.size > 25 * 1024 * 1024) {
-                    $message.warning(`${file.name} 超过25MB限制`)
-                    continue
-                }
-                state.attachments.push({ name: file.name, size: file.size, file })
-            }
-            setState({ attachments: [...state.attachments] })
-            input.value = ''
+        function handleUploadChange(fileList: UploadFileInfo[]) {
+            const newAttachments = fileList
+                .filter(f => f.file)
+                .map(f => ({
+                    name: f.name,
+                    size: f.file!.size,
+                    file: f.file!
+                }))
+            setState({ attachments: newAttachments })
         }
 
-        function removeAttachment(index: number) {
-            state.attachments.splice(index, 1)
-            setState({ attachments: [...state.attachments] })
+        function handleBeforeUpload(data: { file: UploadFileInfo }) {
+            if (data.file.file && data.file.file.size > 25 * 1024 * 1024) {
+                $message.warning(`${data.file.name} 超过25MB限制`)
+                return false
+            }
+            return true
         }
 
         function formatSize(bytes: number) {
@@ -353,7 +356,7 @@ ${mail.htmlBody || mail.textBody || ''}
             }
         }
 
-        // 渲染收件人输入行
+        // 渲染收件人输入行（使用 NDynamicTags）
         function renderRecipientRow(type: 'to' | 'cc' | 'bcc', label: string, required = false) {
             const list = type === 'to' ? state.to : type === 'cc' ? state.cc : state.bcc
             if (type === 'bcc' && !state.showBcc) return null
@@ -364,60 +367,48 @@ ${mail.htmlBody || mail.textBody || ''}
                         {label}
                     </label>
                     <div class="compose-field-content">
-                        <div class="recipient-tags">
-                            {list.map(email => (
-                                <n-tag
-                                    key={email}
-                                    closable
-                                    size="small"
-                                    type="info"
-                                    bordered={false}
-                                    onClose={() => removeRecipient(type, email)}
-                                >
-                                    {email}
-                                </n-tag>
-                            ))}
-                            <input
-                                type="text"
-                                class="recipient-input"
-                                placeholder={list.length === 0 ? '支持多个邮箱粘贴，请使用 ; 或英文 , 分隔邮箱' : ''}
-                                onKeydown={(e: KeyboardEvent) => {
-                                    const target = e.target as HTMLInputElement
-                                    if (e.key === 'Enter' || e.key === ';' || e.key === ',') {
-                                        e.preventDefault()
-                                        const val = target.value.trim().replace(/[;,]$/, '')
-                                        if (val) {
-                                            val.split(/[;,\s]+/)
-                                                .filter(v => v.includes('@'))
-                                                .forEach(v => addRecipient(type, v.trim()))
-                                            target.value = ''
-                                        }
-                                    }
-                                    if (e.key === 'Backspace' && !target.value && list.length > 0) {
-                                        removeRecipient(type, list[list.length - 1])
-                                    }
-                                }}
-                                onBlur={(e: FocusEvent) => {
-                                    const target = e.target as HTMLInputElement
-                                    const val = target.value.trim()
-                                    if (val && val.includes('@')) {
-                                        val.split(/[;,\s]+/)
-                                            .filter(v => v.includes('@'))
-                                            .forEach(v => addRecipient(type, v.trim()))
-                                        target.value = ''
-                                    }
-                                }}
-                            />
-                        </div>
+                        <n-dynamic-tags value={list} onUpdate:value={(val: string[]) => setState({ [type]: val })} size="small" type="info">
+                            {{
+                                input: ({ submit, deactivate }: any) => (
+                                    <n-input
+                                        size="small"
+                                        placeholder="输入邮箱后按回车"
+                                        style={{ width: '220px' }}
+                                        onBlur={(e: FocusEvent) => {
+                                            const val = (e.target as HTMLInputElement)?.value?.trim()
+                                            if (val && val.includes('@')) {
+                                                val.split(/[;,\s]+/)
+                                                    .filter(v => v.includes('@'))
+                                                    .forEach(v => submit(v.trim()))
+                                            }
+                                            deactivate()
+                                        }}
+                                        onKeydown={(e: KeyboardEvent) => {
+                                            if (e.key === ';' || e.key === ',') {
+                                                e.preventDefault()
+                                                const val = (e.target as HTMLInputElement)?.value?.trim().replace(/[;,]$/, '')
+                                                if (val) {
+                                                    val.split(/[;,\s]+/)
+                                                        .filter(v => v.includes('@'))
+                                                        .forEach(v => submit(v.trim()))
+                                                }
+                                            }
+                                        }}
+                                    />
+                                ),
+                                trigger: ({ activate, disabled }: any) => (
+                                    <n-button size="tiny" type="primary" dashed disabled={disabled} onClick={activate}>
+                                        + 添加
+                                    </n-button>
+                                )
+                            }}
+                        </n-dynamic-tags>
                     </div>
                 </div>
             )
         }
 
         const currentSenderEmail = () => state.accounts.find(a => a.value === state.accountId)?.email ?? ''
-
-        // CKEditor 配置
-        const editorConfig = getEditorConfig()
 
         // 编辑器就绪回调
         function onEditorReady(editor: any) {
@@ -494,38 +485,34 @@ ${mail.htmlBody || mail.textBody || ''}
                             <span class="compose-required">*</span>主题
                         </label>
                         <div class="compose-field-content">
-                            <input
-                                type="text"
-                                class="compose-subject-input"
-                                placeholder="请输入主题"
+                            <n-input
                                 value={state.subject}
-                                onInput={(e: Event) => setState({ subject: (e.target as HTMLInputElement).value })}
+                                onUpdate:value={(val: string) => setState({ subject: val })}
+                                placeholder="请输入主题"
+                                size="small"
                             />
                         </div>
                     </div>
                     <div class="compose-field-row">
                         <label class="compose-field-label">添加附件</label>
                         <div class="compose-field-content">
-                            <div class="compose-attachment-area">
-                                <span class="compose-attachment-hint">(支持附件，单个附件大小在 25M 以内)</span>
-                                <n-button text type="primary" size="small" onClick={() => document.getElementById('file-input')?.click()}>
+                            <n-upload
+                                multiple
+                                directoryDnd={false}
+                                showFileList={true}
+                                onUpdate:fileList={handleUploadChange}
+                                onBeforeUpload={handleBeforeUpload}
+                                action=""
+                                defaultUpload={false}
+                                max={10}
+                            >
+                                <n-button size="small" type="primary" text>
                                     浏览文件
                                 </n-button>
-                                <input id="file-input" type="file" multiple style={{ display: 'none' }} onChange={handleFileSelect} />
-                            </div>
-                            {state.attachments.length > 0 && (
-                                <div class="compose-attachment-list">
-                                    {state.attachments.map((att, index) => (
-                                        <div class="compose-attachment-item" key={index}>
-                                            <span class="attachment-name">📄 {att.name}</span>
-                                            <span class="attachment-size">{formatSize(att.size)}</span>
-                                            <n-button text type="error" size="tiny" onClick={() => removeAttachment(index)}>
-                                                ✕
-                                            </n-button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            </n-upload>
+                            <n-text depth={3} style={{ fontSize: '12px' }}>
+                                (支持附件，单个附件大小在 25M 以内)
+                            </n-text>
                         </div>
                     </div>
                 </div>
@@ -541,22 +528,23 @@ ${mail.htmlBody || mail.textBody || ''}
                     {isFullscreen.value && (
                         <div class="compose-fullscreen-bar">
                             <span>全屏编辑</span>
-                            <NButton text type="primary" size="small" onClick={toggleFullscreen}>
+                            <n-button text type="primary" size="small" onClick={toggleFullscreen}>
                                 退出全屏
-                            </NButton>
+                            </n-button>
                         </div>
                     )}
-                    {editorReady.value && CKEditorComponent.value && ClassicEditorRef.value ? (
+                    {editorReady.value && CKEditorComponent.value && ClassicEditorRef.value && editorConfig.value ? (
                         <CKEditorComponent.value
                             editor={ClassicEditorRef.value}
                             modelValue={state.html}
                             onUpdate:modelValue={(val: string) => setState({ html: val })}
-                            config={editorConfig}
+                            config={editorConfig.value}
                             onReady={onEditorReady}
                         />
                     ) : (
                         <div class="compose-editor-loading">
-                            <span>编辑器加载中...</span>
+                            <n-spin size="medium" />
+                            <n-text depth={3}>编辑器加载中...</n-text>
                         </div>
                     )}
                     {!isFullscreen.value && (
@@ -579,10 +567,9 @@ ${mail.htmlBody || mail.textBody || ''}
                             size="small"
                             style={{ width: '260px' }}
                         />
-                        <label class="compose-urgent-label" onClick={() => setState({ urgent: !state.urgent })}>
-                            <input type="checkbox" checked={state.urgent} />
-                            <span>紧急</span>
-                        </label>
+                        <n-checkbox checked={state.urgent} onUpdate:checked={(val: boolean) => setState({ urgent: val })}>
+                            紧急
+                        </n-checkbox>
                     </div>
                 </div>
             </div>
@@ -662,84 +649,6 @@ ${mail.htmlBody || mail.textBody || ''}
     font-size: 14px;
     font-weight: 500;
     line-height: 22px;
-}
-
-/* ===== 收件人输入 ===== */
-.recipient-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    align-items: center;
-    min-height: 22px;
-}
-
-.recipient-input {
-    border: none;
-    outline: none;
-    background: transparent;
-    flex: 1;
-    min-width: 200px;
-    padding: 0;
-    font-size: 13px;
-    line-height: 22px;
-    color: var(--text-color-base);
-    &::placeholder {
-        color: var(--text-color-3);
-    }
-}
-
-/* ===== 主题输入 ===== */
-.compose-subject-input {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-    font-size: 14px;
-    line-height: 22px;
-    color: var(--text-color-base);
-    &::placeholder {
-        color: var(--text-color-3);
-    }
-}
-
-/* ===== 附件区域 ===== */
-.compose-attachment-area {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.compose-attachment-hint {
-    font-size: 12px;
-    color: var(--text-color-3);
-}
-
-.compose-attachment-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
-}
-
-.compose-attachment-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    background: var(--action-color);
-    border-radius: 4px;
-    font-size: 12px;
-
-    .attachment-name {
-        max-width: 180px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .attachment-size {
-        color: var(--text-color-3);
-    }
 }
 
 /* ===== CKEditor 编辑器 ===== */
@@ -860,21 +769,5 @@ ${mail.htmlBody || mail.textBody || ''}
     align-items: center;
     gap: 2px;
     flex-shrink: 0;
-}
-
-.compose-urgent-label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--text-color-2);
-    margin-left: 8px;
-    input[type='checkbox'] {
-        accent-color: var(--primary-color);
-    }
-    &:hover {
-        color: var(--text-color-base);
-    }
 }
 </style>

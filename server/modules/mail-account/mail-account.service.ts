@@ -4,6 +4,7 @@ import { DatabaseService } from '@server/modules/database/database.service'
 import { MAIL_PROVIDER_CONFIG } from '@server/modules/database/database.enums'
 import { ImapFlow } from 'imapflow'
 import * as dto from '@server/interface'
+import * as schema from '@server/modules/database/database.schema'
 
 @Injectable()
 export class MailAccountService extends Logger {
@@ -31,21 +32,18 @@ export class MailAccountService extends Logger {
             if (!config) {
                 throw new HttpException(`不支持的邮箱平台`, HttpStatus.BAD_REQUEST)
             }
-            const account = await this.database.create(
-                ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailAccount),
-                {
-                    stack: this.stack,
-                    request,
-                    body: {
-                        ...body,
-                        userId: request.user.keyId,
-                        imapHost: config.imapHost,
-                        imapPort: config.imapPort,
-                        smtpHost: config.smtpHost,
-                        smtpPort: config.smtpPort
-                    }
+            const account = await this.database.create(ctx.manager.getRepository(schema.SchemaMailAccount), {
+                stack: this.stack,
+                request,
+                body: {
+                    ...body,
+                    userId: request.user.keyId,
+                    imapHost: config.imapHost,
+                    imapPort: config.imapPort,
+                    smtpHost: config.smtpHost,
+                    smtpPort: config.smtpPort
                 }
-            )
+            })
             await ctx.commitTransaction()
             /**异步同步邮件，不阻塞响应**/
             this.syncMailFromIMAP(account).catch(err => {

@@ -34,6 +34,14 @@ export class SchemaMailMessage extends BaseAdapter {
     @Column({ name: 'to_address', comment: '收件人地址', length: 512, nullable: true })
     toAddress: string
 
+    @ApiProperty({ description: '抄送地址' })
+    @Column({ name: 'cc_address', comment: '抄送地址', length: 512, nullable: true })
+    ccAddress: string
+
+    @ApiProperty({ description: '密送地址' })
+    @Column({ name: 'bcc_address', comment: '密送地址', length: 512, nullable: true })
+    bccAddress: string
+
     @ApiProperty({ description: '邮件时间' })
     @Column({ name: 'date', comment: '邮件时间', type: 'datetime', nullable: true })
     date: Date
@@ -45,6 +53,14 @@ export class SchemaMailMessage extends BaseAdapter {
     @ApiProperty({ description: '是否有附件' })
     @Column({ name: 'has_attachment', comment: '是否有附件', type: 'tinyint', nullable: false, default: 0 })
     hasAttachment: number
+
+    @ApiProperty({ description: '邮件正文HTML' })
+    @Column({ name: 'html_body', comment: '邮件正文HTML', type: 'text', nullable: true })
+    htmlBody: string
+
+    @ApiProperty({ description: '邮件纯文本' })
+    @Column({ name: 'text_body', comment: '邮件纯文本', type: 'text', nullable: true })
+    textBody: string
 
     @ApiProperty({ description: '邮件摘要' })
     @Column({ name: 'snippet', comment: '邮件摘要', type: 'text', nullable: true })

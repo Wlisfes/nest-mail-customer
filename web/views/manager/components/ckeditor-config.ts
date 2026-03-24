@@ -1,124 +1,90 @@
 /**
  * CKEditor 5 编辑器配置模块
- * - GPL 免费版插件
- * - 工具栏配置
- * - 邮件编辑器友好设置
+ * 延迟加载以兼容 SSR（避免服务端访问 DOM API）
  */
-import {
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    FontColor,
-    FontBackgroundColor,
-    FontSize,
-    FontFamily,
-    Alignment,
-    List,
-    BlockQuote,
-    Link,
-    AutoLink,
-    Image,
-    ImageResize,
-    ImageToolbar,
-    ImageStyle,
-    Table,
-    TableToolbar,
-    TableProperties,
-    TableCellProperties,
-    SpecialCharacters,
-    SpecialCharactersEssentials,
-    SourceEditing,
-    Essentials,
-    Paragraph,
-    Heading,
-    Indent,
-    IndentBlock,
-    HorizontalLine,
-    GeneralHtmlSupport,
-    Undo,
-    PasteFromOffice
-} from 'ckeditor5'
 
-export const EDITOR_PLUGINS = [
-    Essentials,
-    Undo,
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    FontColor,
-    FontBackgroundColor,
-    FontSize,
-    FontFamily,
-    Alignment,
-    List,
-    BlockQuote,
-    Link,
-    AutoLink,
-    Image,
-    ImageResize,
-    ImageToolbar,
-    ImageStyle,
-    Table,
-    TableToolbar,
-    TableProperties,
-    TableCellProperties,
-    SpecialCharacters,
-    SpecialCharactersEssentials,
-    SourceEditing,
-    Paragraph,
-    Heading,
-    Indent,
-    IndentBlock,
-    HorizontalLine,
-    GeneralHtmlSupport,
-    PasteFromOffice
-]
+let _config: any = null
 
-export const EDITOR_TOOLBAR = {
-    items: [
-        'undo',
-        'redo',
-        '|',
-        'heading',
-        '|',
-        'bold',
-        'italic',
-        'underline',
-        'strikethrough',
-        '|',
-        'fontSize',
-        'fontFamily',
-        'fontColor',
-        'fontBackgroundColor',
-        '|',
-        'alignment',
-        '|',
-        'bulletedList',
-        'numberedList',
-        'outdent',
-        'indent',
-        '|',
-        'blockQuote',
-        'horizontalLine',
-        '|',
-        'link',
-        'insertImage',
-        'insertTable',
-        'specialCharacters',
-        '|',
-        'sourceEditing'
-    ],
-    shouldNotGroupWhenFull: false
-}
+export async function getEditorConfig() {
+    if (_config) return _config
 
-export function getEditorConfig() {
-    return {
+    const ck = await import('ckeditor5')
+
+    const plugins = [
+        ck.Essentials,
+        ck.Undo,
+        ck.Bold,
+        ck.Italic,
+        ck.Underline,
+        ck.Strikethrough,
+        ck.FontColor,
+        ck.FontBackgroundColor,
+        ck.FontSize,
+        ck.FontFamily,
+        ck.Alignment,
+        ck.List,
+        ck.BlockQuote,
+        ck.Link,
+        ck.AutoLink,
+        ck.Image,
+        ck.ImageResize,
+        ck.ImageToolbar,
+        ck.ImageStyle,
+        ck.Table,
+        ck.TableToolbar,
+        ck.TableProperties,
+        ck.TableCellProperties,
+        ck.SpecialCharacters,
+        ck.SpecialCharactersEssentials,
+        ck.SourceEditing,
+        ck.Paragraph,
+        ck.Heading,
+        ck.Indent,
+        ck.IndentBlock,
+        ck.HorizontalLine,
+        ck.GeneralHtmlSupport,
+        ck.PasteFromOffice
+    ]
+
+    _config = {
         licenseKey: 'GPL',
-        plugins: EDITOR_PLUGINS,
-        toolbar: EDITOR_TOOLBAR,
-        language: 'zh-cn',
+        plugins,
+        toolbar: {
+            items: [
+                'undo',
+                'redo',
+                '|',
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                'strikethrough',
+                '|',
+                'fontSize',
+                'fontFamily',
+                'fontColor',
+                'fontBackgroundColor',
+                '|',
+                'alignment',
+                '|',
+                'bulletedList',
+                'numberedList',
+                'outdent',
+                'indent',
+                '|',
+                'blockQuote',
+                'horizontalLine',
+                '|',
+                'link',
+                'insertImage',
+                'insertTable',
+                'specialCharacters',
+                '|',
+                'sourceEditing'
+            ],
+            shouldNotGroupWhenFull: false
+        },
         placeholder: '请输入邮件正文...',
         fontSize: {
             options: [12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 36],
@@ -138,10 +104,10 @@ export function getEditorConfig() {
         },
         heading: {
             options: [
-                { model: 'paragraph', title: '正文', class: 'ck-heading_paragraph' },
-                { model: 'heading1', view: 'h1', title: '标题 1', class: 'ck-heading_heading1' },
-                { model: 'heading2', view: 'h2', title: '标题 2', class: 'ck-heading_heading2' },
-                { model: 'heading3', view: 'h3', title: '标题 3', class: 'ck-heading_heading3' }
+                { model: 'paragraph' as const, title: '正文', class: 'ck-heading_paragraph' },
+                { model: 'heading1' as const, view: 'h1', title: '标题 1', class: 'ck-heading_heading1' },
+                { model: 'heading2' as const, view: 'h2', title: '标题 2', class: 'ck-heading_heading2' },
+                { model: 'heading3' as const, view: 'h3', title: '标题 3', class: 'ck-heading_heading3' }
             ]
         },
         image: {
@@ -159,4 +125,6 @@ export function getEditorConfig() {
             allow: [{ name: /.*/, attributes: true, classes: true, styles: true }]
         }
     }
+
+    return _config
 }

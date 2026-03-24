@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common'
 import { Logger, AutoDescriptor } from '@server/modules/logger/logger.service'
 import { DatabaseService } from '@server/modules/database/database.service'
 import * as dto from '@server/interface'
+import * as schema from '@server/modules/database/database.schema'
 
 @Injectable()
 export class MailDraftService extends Logger {
@@ -14,7 +15,7 @@ export class MailDraftService extends Logger {
     public async httpSaveDraft(request: dto.OmixRequest, body: dto.SaveDraftOptions) {
         const ctx = await this.database.transaction()
         try {
-            await this.database.create(ctx.manager.getRepository(require('@server/modules/database/database.schema').SchemaMailDraft), {
+            await this.database.create(ctx.manager.getRepository(schema.SchemaMailDraft), {
                 stack: this.stack,
                 request,
                 body: {

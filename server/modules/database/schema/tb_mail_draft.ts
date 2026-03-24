@@ -15,6 +15,16 @@ export class SchemaMailDraft extends BaseAdapter {
     @Column({ name: 'to_address', comment: '收件人地址', length: 512, nullable: true })
     toAddress: string
 
+    @ApiProperty({ description: '抄送地址' })
+    @IsOptional()
+    @Column({ name: 'cc_address', comment: '抄送地址', length: 512, nullable: true })
+    ccAddress: string
+
+    @ApiProperty({ description: '密送地址' })
+    @IsOptional()
+    @Column({ name: 'bcc_address', comment: '密送地址', length: 512, nullable: true })
+    bccAddress: string
+
     @ApiProperty({ description: '邮件主题' })
     @IsOptional()
     @Column({ name: 'subject', comment: '邮件主题', length: 512, nullable: true })

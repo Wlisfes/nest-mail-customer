@@ -1,8 +1,9 @@
 <script lang="tsx">
 import { defineComponent, h, computed, Transition } from 'vue'
 import { useRoute, useRouter, RouterView } from 'vue-router'
-import { NIcon, type MenuOption } from 'naive-ui'
+import { NIcon, NDropdown, type MenuOption } from 'naive-ui'
 import { useMouse, useStore } from '@/store'
+import { useCoutext, AUTH } from '@/hooks'
 
 export default defineComponent({
     name: 'Layout',
@@ -61,6 +62,20 @@ export default defineComponent({
             router.push(key)
         }
 
+        const { cookies } = useCoutext()
+
+        // 退出登录
+        function handleLogout() {
+            cookies.remove(AUTH.APP_NEST_TOKEN)
+            router.replace('/main/login')
+        }
+
+        const userDropdownOptions = [{ label: '退出登录', key: 'logout', icon: () => h('span', { style: { fontSize: '14px' } }, '🚪') }]
+
+        function handleUserAction(key: string) {
+            if (key === 'logout') handleLogout()
+        }
+
         return () => (
             <n-layout class="h-full overflow-hidden" has-sider>
                 <n-layout-sider
@@ -95,7 +110,15 @@ export default defineComponent({
                         <n-text class="text-16" style={{ fontWeight: 600 }}>
                             Mail Server
                         </n-text>
-                        <layout-common-deploy></layout-common-deploy>
+                        <div class="flex items-center gap-8">
+                            <layout-common-deploy></layout-common-deploy>
+                            <n-dropdown options={userDropdownOptions} onSelect={handleUserAction} trigger="click" placement="bottom-end">
+                                <n-button text focusable={false} class="flex items-center gap-6" style={{ padding: '4px 8px' }}>
+                                    <span style={{ fontSize: '18px' }}>👤</span>
+                                    <span style={{ fontSize: '12px' }}>▼</span>
+                                </n-button>
+                            </n-dropdown>
+                        </div>
                     </n-layout-header>
                     <n-layout-content
                         class="flex-1 overflow-hidden"

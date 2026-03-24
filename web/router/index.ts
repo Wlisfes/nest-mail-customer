@@ -116,7 +116,7 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
         }
         if (authMode === 'AUTH_NONE' && token) {
             /**已登录不可进入登录/注册页，跳转管理页**/
-            return next({ path: '/manager', replace: true })
+            return next({ path: '/manager/dashboard', replace: true })
         }
         /**NONE 或其他情况，直接放行**/
         return next()

@@ -968,6 +968,11 @@
   dependencies:
     defer-to-connect "^2.0.1"
 
+"@tinymce/tinymce-vue@^6.3.0":
+  version "6.3.0"
+  resolved "https://registry.npmjs.org/@tinymce/tinymce-vue/-/tinymce-vue-6.3.0.tgz#1ea4d57eea71e48aa71da9d8de98472f8505b2d4"
+  integrity sha512-DSP8Jhd3XqCCliTnusfbmz3D8GqQ4iRzkc4aadYHDcJPVjkaqopJ61McOdH82CSy599vGLkPjGzqJYWJkRMiUA==
+
 "@tokenizer/inflate@^0.2.6":
   version "0.2.7"
   resolved "https://registry.npmmirror.com/@tokenizer/inflate/-/inflate-0.2.7.tgz#32dd9dfc9abe457c89b3d9b760fc0690c85a103b"
@@ -5532,6 +5537,11 @@ tinyglobby@^0.2.12:
   dependencies:
     fdir "^6.4.4"
     picomatch "^4.0.2"
+
+tinymce@^8.3.2:
+  version "8.3.2"
+  resolved "https://registry.npmjs.org/tinymce/-/tinymce-8.3.2.tgz#bfdba186b00d61598eafbc29cab778de7f8e1e33"
+  integrity sha512-iZ8aIUtrgGOw2AkukNf8spUM0LOzNLoCHRepwXQwWmHxP2TI5LzHjjG0SmXGxbya4EmoD5/pAox0ZXJfLO5DUw==
 
 tmp@^0.0.33:
   version "0.0.33"

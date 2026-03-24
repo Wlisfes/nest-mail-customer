@@ -1,11 +1,10 @@
 <script lang="tsx">
-import { defineComponent, onMounted, ref, watch } from 'vue'
+import { defineComponent, onMounted, ref, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { httpFetchMailAccounts, httpSendMail, httpSaveDraft, httpFetchMailDetail } from '@/api'
 import { $message, $dialog } from '@/utils'
 import { useState } from '@/hooks'
-import { NButton, NTag, NPopover, NTooltip, NDropdown } from 'naive-ui'
-import type { DropdownOption } from 'naive-ui'
+import { NButton, NTag, NDropdown, NSelect } from 'naive-ui'
 
 // 邮件模板
 const MAIL_TEMPLATES = [
@@ -79,39 +78,19 @@ const MAIL_TEMPLATES = [
     }
 ]
 
-// 富文本编辑器工具栏
-const EDITOR_TOOLS = [
-    { icon: 'i-carbon-text-bold', command: 'bold', title: '粗体' },
-    { icon: 'i-carbon-text-italic', command: 'italic', title: '斜体' },
-    { icon: 'i-carbon-text-underline', command: 'underline', title: '下划线' },
-    { icon: 'i-carbon-text-strikethrough', command: 'strikeThrough', title: '删除线' },
-    { divider: true },
-    { icon: 'i-carbon-text-align-left', command: 'justifyLeft', title: '左对齐' },
-    { icon: 'i-carbon-text-align-center', command: 'justifyCenter', title: '居中' },
-    { icon: 'i-carbon-text-align-right', command: 'justifyRight', title: '右对齐' },
-    { divider: true },
-    { icon: 'i-carbon-list-bulleted', command: 'insertUnorderedList', title: '无序列表' },
-    { icon: 'i-carbon-list-numbered', command: 'insertOrderedList', title: '有序列表' },
-    { divider: true },
-    { icon: 'i-carbon-link', command: 'createLink', title: '插入链接' },
-    { icon: 'i-carbon-image', command: 'insertImage', title: '插入图片' },
-    { icon: 'i-carbon-code', command: 'formatBlock', value: 'PRE', title: '代码块' },
-    { icon: 'i-carbon-undo', command: 'undo', title: '撤销' },
-    { icon: 'i-carbon-redo', command: 'redo', title: '重做' }
-]
-
 export default defineComponent({
     name: 'ManagerCompose',
     setup() {
         const route = useRoute()
         const router = useRouter()
-        const editorRef = ref<HTMLDivElement>()
-        
+        const editorReady = ref(false)
+        const EditorComponent = shallowRef<any>(null)
+
         const { state, setState } = useState({
             loading: false,
             saving: false,
-            showCc: false,
             showBcc: false,
+            urgent: false,
             accountId: null as number | null,
             to: [] as string[],
             cc: [] as string[],
@@ -124,8 +103,41 @@ export default defineComponent({
             forward: null as any
         })
 
-        // 获取回复/转发原邮件
         onMounted(async () => {
+            // 动态导入 TinyMCE（仅客户端）
+            if (typeof window !== 'undefined') {
+                try {
+                    const tinymce = await import('tinymce/tinymce')
+                    // 设置许可证（必须在加载主题/插件之前）
+                    if (tinymce.default) {
+                        tinymce.default.overrideDefaults({ license_key: 'gpl', promotion: false })
+                    }
+                    await import('tinymce/themes/silver')
+                    await import('tinymce/icons/default')
+                    await import('tinymce/models/dom')
+                    // 皮肤 CSS
+                    await import('tinymce/skins/ui/oxide/skin.min.css')
+                    await import('tinymce/skins/content/default/content.min.css')
+                    // 加载插件
+                    await import('tinymce/plugins/lists')
+                    await import('tinymce/plugins/link')
+                    await import('tinymce/plugins/image')
+                    await import('tinymce/plugins/table')
+                    await import('tinymce/plugins/code')
+                    await import('tinymce/plugins/wordcount')
+                    await import('tinymce/plugins/preview')
+                    await import('tinymce/plugins/fullscreen')
+                    await import('tinymce/plugins/autolink')
+                    await import('tinymce/plugins/charmap')
+
+                    const tinymceVue = await import('@tinymce/tinymce-vue')
+                    EditorComponent.value = tinymceVue.default
+                    editorReady.value = true
+                } catch (err) {
+                    console.error('TinyMCE 加载失败', err)
+                }
+            }
+
             // 加载邮箱账号
             try {
                 const res: any = await httpFetchMailAccounts()
@@ -138,7 +150,6 @@ export default defineComponent({
                         email: item.email
                     }))
                 })
-                // 默认选中第一个
                 if (list.length > 0 && !state.accountId) {
                     await setState({ accountId: list[0].keyId })
                 }
@@ -195,33 +206,6 @@ ${mail.htmlBody || mail.textBody || ''}
             }
         })
 
-        // 富文本命令
-        function execCommand(command: string, value?: string) {
-            document.execCommand(command, false, value)
-            if (editorRef.value) {
-                editorRef.value.focus()
-            }
-        }
-
-        // 处理工具栏点击
-        function handleToolClick(tool: any) {
-            if (tool.command === 'createLink') {
-                const url = prompt('请输入链接地址:', 'https://')
-                if (url) execCommand(tool.command, url)
-            } else if (tool.command === 'insertImage') {
-                const url = prompt('请输入图片地址:', 'https://')
-                if (url) execCommand(tool.command, url)
-            } else {
-                execCommand(tool.command, tool.value)
-            }
-        }
-
-        // 处理编辑器内容变化
-        function handleEditorInput(e: Event) {
-            const target = e.target as HTMLDivElement
-            setState({ html: target.innerHTML })
-        }
-
         // 添加收件人
         function addRecipient(type: 'to' | 'cc' | 'bcc', email: string) {
             if (!email || !email.includes('@')) return
@@ -247,30 +231,23 @@ ${mail.htmlBody || mail.textBody || ''}
             const input = e.target as HTMLInputElement
             const files = input.files
             if (!files) return
-
             for (let i = 0; i < files.length; i++) {
                 const file = files[i]
                 if (file.size > 25 * 1024 * 1024) {
                     $message.warning(`${file.name} 超过25MB限制`)
                     continue
                 }
-                state.attachments.push({
-                    name: file.name,
-                    size: file.size,
-                    file: file
-                })
+                state.attachments.push({ name: file.name, size: file.size, file })
             }
             setState({ attachments: [...state.attachments] })
             input.value = ''
         }
 
-        // 移除附件
         function removeAttachment(index: number) {
             state.attachments.splice(index, 1)
             setState({ attachments: [...state.attachments] })
         }
 
-        // 格式化文件大小
         function formatSize(bytes: number) {
             if (bytes < 1024) return bytes + ' B'
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
@@ -281,9 +258,7 @@ ${mail.htmlBody || mail.textBody || ''}
         function applyTemplate(templateKey: string) {
             const template = MAIL_TEMPLATES.find(t => t.key === templateKey)
             if (!template) return
-
             if (template.content) {
-                // 填充模板变量
                 let content = template.content
                 const vars: Record<string, string> = {
                     topic: '【请填写主题】',
@@ -307,45 +282,31 @@ ${mail.htmlBody || mail.textBody || ''}
                     phone: '【请填写电话】',
                     email: state.accounts.find(a => a.value === state.accountId)?.email || ''
                 }
-
                 Object.keys(vars).forEach(key => {
                     content = content.replace(new RegExp(`{${key}}`, 'g'), vars[key])
                 })
-
                 setState({ html: content })
-                if (editorRef.value) {
-                    editorRef.value.innerHTML = content
-                }
             }
-
             if (template.subject && !state.subject) {
                 setState({ subject: template.subject.replace(/{\w+}/g, '【请填写】') })
             }
-
             $message.success(`已应用模板：${template.label}`)
         }
 
         // 发送邮件
         async function handleSend() {
-            if (!state.accountId) {
-                $message.warning('请选择发件邮箱')
-                return
-            }
+            if (!state.accountId) return $message.warning('请选择发件邮箱')
             if (state.to.length === 0 && state.cc.length === 0 && state.bcc.length === 0) {
-                $message.warning('请至少填写一个收件人')
-                return
+                return $message.warning('请至少填写一个收件人')
             }
             if (!state.subject.trim()) {
-                $dialog.warning({
+                return $dialog.warning({
                     title: '确认发送',
                     content: '邮件主题为空，是否继续发送？',
                     positiveText: '继续发送',
                     negativeText: '取消',
-                    onPositiveClick: async () => {
-                        await doSend()
-                    }
+                    onPositiveClick: () => doSend()
                 })
-                return
             }
             await doSend()
         }
@@ -371,7 +332,6 @@ ${mail.htmlBody || mail.textBody || ''}
             }
         }
 
-        // 保存草稿
         async function handleSaveDraft() {
             await setState({ saving: true })
             try {
@@ -392,22 +352,39 @@ ${mail.htmlBody || mail.textBody || ''}
             }
         }
 
-        // 渲染收件人输入
-        function renderRecipientInput(type: 'to' | 'cc' | 'bcc', label: string) {
-            const list = type === 'to' ? state.to : type === 'cc' ? state.cc : state.bcc
-            const showField = type === 'to' ? true : type === 'cc' ? state.showCc : state.showBcc
-            
-            if (!showField && type !== 'to') return null
+        function handleCancel() {
+            if (state.to.length > 0 || state.subject || state.html) {
+                $dialog.warning({
+                    title: '确认取消',
+                    content: '当前邮件内容未保存，确定要取消吗？',
+                    positiveText: '确定取消',
+                    negativeText: '继续编辑',
+                    onPositiveClick: () => router.back()
+                })
+            } else {
+                router.back()
+            }
+        }
 
+        // 渲染收件人输入行
+        function renderRecipientRow(type: 'to' | 'cc' | 'bcc', label: string, required = false) {
+            const list = type === 'to' ? state.to : type === 'cc' ? state.cc : state.bcc
+            if (type === 'bcc' && !state.showBcc) return null
             return (
-                <n-form-item label={label} label-width={80}>
-                    <div class="recipient-input-wrapper">
+                <div class="compose-field-row">
+                    <label class="compose-field-label">
+                        {required && <span class="compose-required">*</span>}
+                        {label}
+                    </label>
+                    <div class="compose-field-content">
                         <div class="recipient-tags">
                             {list.map(email => (
                                 <n-tag
                                     key={email}
                                     closable
                                     size="small"
+                                    type="info"
+                                    bordered={false}
                                     onClose={() => removeRecipient(type, email)}
                                 >
                                     {email}
@@ -416,172 +393,217 @@ ${mail.htmlBody || mail.textBody || ''}
                             <input
                                 type="text"
                                 class="recipient-input"
-                                placeholder={list.length === 0 ? `输入邮箱地址，按回车添加` : ''}
+                                placeholder={list.length === 0 ? '支持多个邮箱粘贴，请使用 ; 或英文 , 分隔邮箱' : ''}
                                 onKeydown={(e: KeyboardEvent) => {
-                                    if (e.key === 'Enter') {
+                                    const target = e.target as HTMLInputElement
+                                    if (e.key === 'Enter' || e.key === ';' || e.key === ',') {
                                         e.preventDefault()
-                                        addRecipient(type, (e.target as HTMLInputElement).value)
-                                        ;(e.target as HTMLInputElement).value = ''
+                                        const val = target.value.trim().replace(/[;,]$/, '')
+                                        if (val) {
+                                            val.split(/[;,\s]+/)
+                                                .filter(v => v.includes('@'))
+                                                .forEach(v => addRecipient(type, v.trim()))
+                                            target.value = ''
+                                        }
+                                    }
+                                    if (e.key === 'Backspace' && !target.value && list.length > 0) {
+                                        removeRecipient(type, list[list.length - 1])
+                                    }
+                                }}
+                                onBlur={(e: FocusEvent) => {
+                                    const target = e.target as HTMLInputElement
+                                    const val = target.value.trim()
+                                    if (val && val.includes('@')) {
+                                        val.split(/[;,\s]+/)
+                                            .filter(v => v.includes('@'))
+                                            .forEach(v => addRecipient(type, v.trim()))
+                                        target.value = ''
                                     }
                                 }}
                             />
                         </div>
                     </div>
-                </n-form-item>
+                </div>
             )
         }
 
+        const currentSenderEmail = () => state.accounts.find(a => a.value === state.accountId)?.email ?? ''
+
+        // TinyMCE 配置
+        const tinymceInit = {
+            height: '100%',
+            menubar: false,
+            branding: false,
+            statusbar: true,
+            elementpath: false,
+            resize: false,
+            placeholder: '请输入邮件正文...',
+            plugins: 'lists link image table code wordcount preview fullscreen autolink charmap',
+            toolbar: [
+                'undo redo | bold italic underline strikethrough | forecolor backcolor | fontsize',
+                'alignleft aligncenter alignright alignjustify | bullist numlist | blockquote link image table | charmap code fullscreen'
+            ],
+            font_size_formats: '12px 13px 14px 15px 16px 18px 20px 24px 28px 32px 36px',
+            content_style: `
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #333;
+                    padding: 12px 16px;
+                    margin: 0;
+                }
+                p { margin: 0 0 8px 0; }
+                blockquote {
+                    border-left: 3px solid #6366f1;
+                    padding-left: 12px;
+                    margin: 0 0 8px 0;
+                    color: #666;
+                }
+                table { border-collapse: collapse; width: 100%; }
+                table td, table th { border: 1px solid #ddd; padding: 8px; }
+                a { color: #6366f1; }
+                img { max-width: 100%; height: auto; }
+            `,
+            skin: false,
+            content_css: false,
+            promotion: false,
+            license_key: 'gpl',
+            base_url: '/tinymce'
+        }
+
         return () => (
-            <n-element class="page-container animate-fadeInUp">
-                <div class="page-header">
-                    <div class="flex items-center gap-8">
-                        <n-text class="text-22" style={{ fontWeight: 800 }}>✏️ 写邮件</n-text>
-                        {(state.replyTo || state.forward) && (
-                            <n-tag type="info" size="small">
-                                {state.replyTo ? '回复邮件' : '转发邮件'}
-                            </n-tag>
-                        )}
+            <div class="compose-page animate-fadeInUp">
+                {/* ===== 顶部操作栏 ===== */}
+                <div class="compose-action-bar">
+                    <div class="compose-action-left">
+                        <n-button
+                            type="primary"
+                            size="medium"
+                            loading={state.loading}
+                            onClick={handleSend}
+                            style={{ fontWeight: 600, borderRadius: '6px', paddingLeft: '20px', paddingRight: '20px' }}
+                        >
+                            <i class="i-carbon-send-filled mr-6"></i>
+                            发送
+                        </n-button>
+                        <n-button size="medium" secondary onClick={handleSaveDraft} loading={state.saving}>
+                            存为草稿
+                        </n-button>
+                        <n-button size="medium" secondary onClick={handleCancel}>
+                            取消
+                        </n-button>
                     </div>
-                    <div class="flex gap-8">
+                    <div class="compose-action-right">
                         <n-dropdown
                             trigger="click"
                             options={MAIL_TEMPLATES.map(t => ({ label: t.label, key: t.key }))}
                             onSelect={(key: string) => applyTemplate(key)}
                         >
-                            <n-button secondary round>
-                                <i class="i-carbon-template mr-6"></i>
-                                模板
+                            <n-button text type="primary" size="small">
+                                使用模板
                             </n-button>
                         </n-dropdown>
-                        <n-button secondary round loading={state.saving} onClick={handleSaveDraft}>
-                            <i class="i-carbon-save mr-6"></i>
-                            存草稿
-                        </n-button>
-                        <n-button type="primary" round loading={state.loading} onClick={handleSend} style={{ fontWeight: 600 }}>
-                            <i class="i-carbon-send-filled mr-6"></i>
-                            发送
-                        </n-button>
+                        {!state.showBcc && (
+                            <n-button text type="primary" size="small" onClick={() => setState({ showBcc: true })}>
+                                添加密送
+                            </n-button>
+                        )}
+                        {(state.replyTo || state.forward) && (
+                            <n-tag type="info" size="small" round>
+                                {state.replyTo ? '回复邮件' : '转发邮件'}
+                            </n-tag>
+                        )}
                     </div>
                 </div>
 
-                <n-card content-class="p-24!" style={{ borderRadius: '16px' }} hoverable>
-                    <n-form label-placement="left" label-width={80}>
-                        {/* 发件人 */}
-                        <n-form-item label="发件人">
-                            <n-select
-                                v-model:value={state.accountId}
-                                options={state.accounts}
-                                placeholder="请选择发件邮箱"
-                                style={{ width: '400px' }}
-                            />
-                        </n-form-item>
-
-                        {/* 收件人 */}
-                        {renderRecipientInput('to', '收件人')}
-
-                        {/* 抄送/密送切换 */}
-                        <div class="flex gap-16 m-bs-8 m-be-16" style={{ paddingLeft: '88px' }}>
-                            {!state.showCc && (
-                                <n-button text type="primary" size="small" onClick={() => setState({ showCc: true })}>
-                                    + 抄送
-                                </n-button>
-                            )}
-                            {!state.showBcc && (
-                                <n-button text type="primary" size="small" onClick={() => setState({ showBcc: true })}>
-                                    + 密送
-                                </n-button>
-                            )}
+                {/* ===== 表单区域 ===== */}
+                <div class="compose-form">
+                    <div class="compose-field-row">
+                        <label class="compose-field-label">当前发件人</label>
+                        <div class="compose-field-content">
+                            <span class="compose-sender-email">{currentSenderEmail()}</span>
                         </div>
-
-                        {/* 抄送 */}
-                        {renderRecipientInput('cc', '抄送')}
-
-                        {/* 密送 */}
-                        {renderRecipientInput('bcc', '密送')}
-
-                        {/* 主题 */}
-                        <n-form-item label="主题" label-width={80}>
-                            <n-input
-                                v-model:value={state.subject}
-                                placeholder="请输入邮件主题"
+                    </div>
+                    {renderRecipientRow('to', '收件人', true)}
+                    {renderRecipientRow('cc', '抄送给')}
+                    {renderRecipientRow('bcc', '密送')}
+                    <div class="compose-field-row">
+                        <label class="compose-field-label">
+                            <span class="compose-required">*</span>主题
+                        </label>
+                        <div class="compose-field-content">
+                            <input
+                                type="text"
+                                class="compose-subject-input"
+                                placeholder="请输入主题"
+                                value={state.subject}
+                                onInput={(e: Event) => setState({ subject: (e.target as HTMLInputElement).value })}
                             />
-                        </n-form-item>
-
-                        {/* 附件 */}
-                        <n-form-item label="附件" label-width={80}>
-                            <div class="attachment-area">
-                                {state.attachments.length > 0 && (
-                                    <div class="attachment-list">
-                                        {state.attachments.map((att, index) => (
-                                            <div class="attachment-item" key={index}>
-                                                <i class="i-carbon-document text-16"></i>
-                                                <span class="attachment-name">{att.name}</span>
-                                                <span class="attachment-size">{formatSize(att.size)}</span>
-                                                <n-button
-                                                    text
-                                                    type="error"
-                                                    size="tiny"
-                                                    onClick={() => removeAttachment(index)}
-                                                >
-                                                    <i class="i-carbon-close text-14"></i>
-                                                </n-button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                <n-button dashed onClick={() => document.getElementById('file-input')?.click()}>
-                                    <i class="i-carbon-attachment mr-6"></i>
-                                    添加附件
+                        </div>
+                    </div>
+                    <div class="compose-field-row">
+                        <label class="compose-field-label">添加附件</label>
+                        <div class="compose-field-content">
+                            <div class="compose-attachment-area">
+                                <span class="compose-attachment-hint">(支持附件，单个附件大小在 25M 以内)</span>
+                                <n-button text type="primary" size="small" onClick={() => document.getElementById('file-input')?.click()}>
+                                    浏览文件
                                 </n-button>
-                                <input
-                                    id="file-input"
-                                    type="file"
-                                    multiple
-                                    style={{ display: 'none' }}
-                                    onChange={handleFileSelect}
-                                />
+                                <input id="file-input" type="file" multiple style={{ display: 'none' }} onChange={handleFileSelect} />
                             </div>
-                        </n-form-item>
-
-                        {/* 富文本编辑器 */}
-                        <n-form-item label="正文" label-width={80} style={{ marginBottom: 0 }}>
-                            <div class="rich-editor">
-                                {/* 工具栏 */}
-                                <div class="editor-toolbar">
-                                    {EDITOR_TOOLS.map((tool, index) => (
-                                        tool.divider ? (
-                                            <div key={index} class="toolbar-divider"></div>
-                                        ) : (
-                                            <n-tooltip key={index} trigger="hover">
-                                                {{
-                                                    trigger: () => (
-                                                        <button
-                                                            class="toolbar-btn"
-                                                            onClick={() => handleToolClick(tool)}
-                                                        >
-                                                            <i class={tool.icon}></i>
-                                                        </button>
-                                                    ),
-                                                    default: () => tool.title
-                                                }}
-                                            </n-tooltip>
-                                        )
+                            {state.attachments.length > 0 && (
+                                <div class="compose-attachment-list">
+                                    {state.attachments.map((att, index) => (
+                                        <div class="compose-attachment-item" key={index}>
+                                            <span class="attachment-name">📄 {att.name}</span>
+                                            <span class="attachment-size">{formatSize(att.size)}</span>
+                                            <n-button text type="error" size="tiny" onClick={() => removeAttachment(index)}>
+                                                ✕
+                                            </n-button>
+                                        </div>
                                     ))}
                                 </div>
-                                {/* 编辑区域 */}
-                                <div
-                                    ref={editorRef}
-                                    class="editor-content"
-                                    contentEditable
-                                    onInput={handleEditorInput}
-                                    innerHTML={state.html}
-                                    placeholder="请输入邮件正文..."
-                                ></div>
-                            </div>
-                        </n-form-item>
-                    </n-form>
-                </n-card>
-            </n-element>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ===== TinyMCE 编辑器 ===== */}
+                <div class="compose-editor-wrap">
+                    {editorReady.value && EditorComponent.value ? (
+                        <EditorComponent.value
+                            modelValue={state.html}
+                            onUpdate:modelValue={(val: string) => setState({ html: val })}
+                            init={tinymceInit}
+                        />
+                    ) : (
+                        <div class="compose-editor-loading">
+                            <span>编辑器加载中...</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* ===== 底部栏 ===== */}
+                <div class="compose-bottom-bar">
+                    <div class="compose-bottom-left">
+                        <span class="compose-bottom-label">
+                            <span class="compose-required">*</span>发件人
+                        </span>
+                        <n-select
+                            v-model:value={state.accountId}
+                            options={state.accounts}
+                            placeholder="请选择发件邮箱"
+                            size="small"
+                            style={{ width: '260px' }}
+                        />
+                        <label class="compose-urgent-label" onClick={() => setState({ urgent: !state.urgent })}>
+                            <input type="checkbox" checked={state.urgent} />
+                            <span>紧急</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         )
     }
 })
@@ -590,23 +612,83 @@ ${mail.htmlBody || mail.textBody || ''}
 <style lang="scss" scoped>
 @import '../manager.scss';
 
-.recipient-input-wrapper {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 4px 8px;
-    min-height: 34px;
-    transition: border-color 0.2s;
-
-    &:hover, &:focus-within {
-        border-color: var(--primary-color);
-    }
+.compose-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
 }
 
+/* ===== 顶部操作栏 ===== */
+.compose-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.compose-action-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.compose-action-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* ===== 表单区域 ===== */
+.compose-form {
+    flex-shrink: 0;
+}
+
+.compose-field-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border-color);
+    min-height: 42px;
+}
+
+.compose-field-label {
+    flex-shrink: 0;
+    width: 80px;
+    font-size: 13px;
+    color: var(--text-color-2);
+    line-height: 22px;
+    padding-top: 1px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.compose-required {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.compose-field-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.compose-sender-email {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+}
+
+/* ===== 收件人输入 ===== */
 .recipient-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
+    min-height: 22px;
 }
 
 .recipient-input {
@@ -614,141 +696,145 @@ ${mail.htmlBody || mail.textBody || ''}
     outline: none;
     background: transparent;
     flex: 1;
-    min-width: 120px;
-    padding: 4px 0;
-    font-size: 14px;
+    min-width: 200px;
+    padding: 0;
+    font-size: 13px;
+    line-height: 22px;
     color: var(--text-color-base);
-
     &::placeholder {
         color: var(--text-color-3);
     }
 }
 
-.attachment-area {
+/* ===== 主题输入 ===== */
+.compose-subject-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--text-color-base);
+    &::placeholder {
+        color: var(--text-color-3);
+    }
+}
+
+/* ===== 附件区域 ===== */
+.compose-attachment-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.compose-attachment-hint {
+    font-size: 12px;
+    color: var(--text-color-3);
+}
+
+.compose-attachment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.compose-attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--action-color);
+    border-radius: 4px;
+    font-size: 12px;
+
+    .attachment-name {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .attachment-size {
+        color: var(--text-color-3);
+    }
+}
+
+/* ===== TinyMCE 编辑器 ===== */
+.compose-editor-wrap {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-.attachment-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.attachment-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    background: var(--action-color);
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-.attachment-name {
-    max-width: 200px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text-color-base);
+
+    :deep(.tox-tinymce) {
+        border: none !important;
+        border-top: 1px solid var(--border-color) !important;
+        border-radius: 0 !important;
+        flex: 1;
+    }
+
+    :deep(.tox-editor-header) {
+        border-bottom: 1px solid var(--border-color) !important;
+        box-shadow: none !important;
+    }
+
+    :deep(.tox-toolbar__primary) {
+        background: transparent !important;
+    }
+
+    :deep(.tox-statusbar) {
+        border-top: 1px solid var(--border-color) !important;
+    }
 }
 
-.attachment-size {
-    color: var(--text-color-3);
-    font-size: 12px;
-}
-
-.rich-editor {
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.editor-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 12px;
-    background: var(--action-color);
-    border-bottom: 1px solid var(--border-color);
-    flex-wrap: wrap;
-}
-
-.toolbar-btn {
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    cursor: pointer;
+.compose-editor-loading {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-color-base);
-    transition: all 0.2s;
-
-    &:hover {
-        background: var(--hover-color);
-        color: var(--primary-color);
-    }
-
-    i {
-        font-size: 16px;
-    }
-}
-
-.toolbar-divider {
-    width: 1px;
-    height: 20px;
-    background: var(--divider-color);
-    margin: 0 4px;
-}
-
-.editor-content {
-    min-height: 300px;
-    padding: 16px;
+    color: var(--text-color-3);
     font-size: 14px;
-    line-height: 1.8;
-    color: var(--text-color-base);
-    outline: none;
+}
 
-    &:empty::before {
-        content: attr(placeholder);
-        color: var(--text-color-3);
-        pointer-events: none;
+/* ===== 底部栏 ===== */
+.compose-bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.compose-bottom-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.compose-bottom-label {
+    font-size: 13px;
+    color: var(--text-color-2);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.compose-urgent-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-color-2);
+    margin-left: 8px;
+    input[type='checkbox'] {
+        accent-color: var(--primary-color);
     }
-
-    :deep(p) {
-        margin: 0 0 12px 0;
-    }
-
-    :deep(ul), :deep(ol) {
-        margin: 0 0 12px 0;
-        padding-left: 24px;
-    }
-
-    :deep(li) {
-        margin-bottom: 4px;
-    }
-
-    :deep(a) {
-        color: var(--primary-color);
-    }
-
-    :deep(pre) {
-        background: var(--code-color);
-        padding: 12px;
-        border-radius: 8px;
-        font-family: monospace;
-        overflow-x: auto;
-    }
-
-    :deep(blockquote) {
-        border-left: 3px solid var(--primary-color);
-        padding-left: 12px;
-        margin: 0 0 12px 0;
-        color: var(--text-color-3);
+    &:hover {
+        color: var(--text-color-base);
     }
 }
 </style>

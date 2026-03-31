@@ -237,7 +237,7 @@ export default defineComponent({
                     </div>
                     <n-layout-content
                         class="flex-1 overflow-hidden"
-                        content-class="min-h-full flex flex-col"
+                        content-class="h-full flex flex-col"
                         native-scrollbar={false}
                         scrollbar-props={{ size: 100, trigger: 'none' }}
                     >

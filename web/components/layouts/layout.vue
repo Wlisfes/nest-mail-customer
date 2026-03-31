@@ -89,6 +89,9 @@ export default defineComponent({
             ManagerMailDetail: '📧',
         }
 
+        // 初始化固定标签（仪表盘）
+        tabsStore.addTab({ name: 'ManagerDashboard', path: '/manager/dashboard', title: '仪表盘', icon: '📊', affix: true })
+
         // 监听路由，自动添加标签
         watch(
             () => route.fullPath,

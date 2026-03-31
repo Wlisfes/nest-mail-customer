@@ -15,6 +15,9 @@ import { MailAccountModule } from '@server/modules/mail-account/mail-account.mod
 import { MailMessageModule } from '@server/modules/mail-message/mail-message.module'
 import { MailDraftModule } from '@server/modules/mail-draft/mail-draft.module'
 import { MailBlacklistModule } from '@server/modules/mail-blacklist/mail-blacklist.module'
+import { MailTemplateModule } from '@server/modules/mail-template/mail-template.module'
+import { MailTemplateCategoryModule } from '@server/modules/mail-template-category/mail-template-category.module'
+import { MailTemplateVariableModule } from '@server/modules/mail-template-variable/mail-template-variable.module'
 import { DashboardModule } from '@server/modules/dashboard/dashboard.module'
 import { AttachmentModule } from '@server/modules/attachment/attachment.module'
 import { AppController } from '@server/app.controller'
@@ -32,6 +35,9 @@ import { AppController } from '@server/app.controller'
         MailMessageModule,
         MailDraftModule,
         MailBlacklistModule,
+        MailTemplateModule,
+        MailTemplateCategoryModule,
+        MailTemplateVariableModule,
         DashboardModule,
         AttachmentModule
     ],

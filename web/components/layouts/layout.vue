@@ -52,6 +52,18 @@ export default defineComponent({
                 key: '/manager/blacklist',
                 icon: () => h('span', { style: { fontSize: '18px' } }, '🚫')
             },
+            { type: 'divider', key: 'divider-2' },
+            {
+                label: '邮件模板',
+                key: '/manager/templates',
+                icon: () => h('span', { style: { fontSize: '18px' } }, '📧')
+            },
+            {
+                label: '模板变量',
+                key: '/manager/template-vars',
+                icon: () => h('span', { style: { fontSize: '18px' } }, '🔤')
+            },
+            { type: 'divider', key: 'divider-3' },
             {
                 label: '平台配置',
                 key: '/manager/settings',
@@ -87,6 +99,11 @@ export default defineComponent({
             ManagerBlacklist: '🚫',
             ManagerSettings: '⚙',
             ManagerMailDetail: '📧',
+            ManagerTemplates: '📧',
+            ManagerTemplateEditorNew: '✏️',
+            ManagerTemplateEditor: '✏️',
+            ManagerTemplateSend: '📨',
+            ManagerTemplateVars: '🔤',
         }
 
         // 初始化固定标签（仪表盘）

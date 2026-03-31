@@ -15,7 +15,10 @@ export class DatabaseService extends Logger {
         @InjectRepository(schema.SchemaMailMessage) public readonly schemaMailMessage: Repository<schema.SchemaMailMessage>,
         @InjectRepository(schema.SchemaMailAttachment) public readonly schemaMailAttachment: Repository<schema.SchemaMailAttachment>,
         @InjectRepository(schema.SchemaMailDraft) public readonly schemaMailDraft: Repository<schema.SchemaMailDraft>,
-        @InjectRepository(schema.SchemaMailBlacklist) public readonly schemaMailBlacklist: Repository<schema.SchemaMailBlacklist>
+        @InjectRepository(schema.SchemaMailBlacklist) public readonly schemaMailBlacklist: Repository<schema.SchemaMailBlacklist>,
+        @InjectRepository(schema.SchemaMailTemplate) public readonly schemaMailTemplate: Repository<schema.SchemaMailTemplate>,
+        @InjectRepository(schema.SchemaMailTemplateCategory) public readonly schemaMailTemplateCategory: Repository<schema.SchemaMailTemplateCategory>,
+        @InjectRepository(schema.SchemaMailTemplateVariable) public readonly schemaMailTemplateVariable: Repository<schema.SchemaMailTemplateVariable>
     ) {
         super()
     }

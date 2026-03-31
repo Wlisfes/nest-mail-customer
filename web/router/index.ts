@@ -63,6 +63,36 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                         component: () => import('@/views/manager/pages/manager-settings.vue')
                     },
                     {
+                        path: '/manager/templates',
+                        name: 'ManagerTemplates',
+                        meta: { AUTH: 'AUTH', title: '邮件模板' },
+                        component: () => import('@/views/manager/pages/manager-templates.vue')
+                    },
+                    {
+                        path: '/manager/template-editor',
+                        name: 'ManagerTemplateEditorNew',
+                        meta: { AUTH: 'AUTH', title: '新建模板' },
+                        component: () => import('@/views/manager/pages/manager-template-editor.vue')
+                    },
+                    {
+                        path: '/manager/template-editor/:id',
+                        name: 'ManagerTemplateEditor',
+                        meta: { AUTH: 'AUTH', title: '编辑模板' },
+                        component: () => import('@/views/manager/pages/manager-template-editor.vue')
+                    },
+                    {
+                        path: '/manager/template-send/:id',
+                        name: 'ManagerTemplateSend',
+                        meta: { AUTH: 'AUTH', title: '模板发送' },
+                        component: () => import('@/views/manager/pages/manager-template-send.vue')
+                    },
+                    {
+                        path: '/manager/template-vars',
+                        name: 'ManagerTemplateVars',
+                        meta: { AUTH: 'AUTH', title: '模板变量' },
+                        component: () => import('@/views/manager/pages/manager-template-vars.vue')
+                    },
+                    {
                         path: '/manager/mail/:id',
                         name: 'ManagerMailDetail',
                         meta: { AUTH: 'AUTH', title: '邮件详情' },

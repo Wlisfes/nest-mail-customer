@@ -46,7 +46,7 @@ export default defineComponent({
             }
         ]
 
-        async function handleClick(action: typeof actions[0]) {
+        async function handleClick(action: (typeof actions)[0]) {
             if (action.action === 'sync') {
                 if (state.syncing) return
                 await setState({ syncing: true })
@@ -64,9 +64,11 @@ export default defineComponent({
         }
 
         return () => (
-            <n-card hoverable content-class="p-20!" class="animate-fadeInUp animate-stagger-3" style={{ borderRadius: '16px' }}>
-                <n-text class="text-16" style={{ fontWeight: 700 }}>快捷操作</n-text>
-                <div class="manager-quick-actions m-bs-16">
+            <n-card hoverable content-class="p-24!" class="animate-fadeInUp animate-stagger-3" style={{ borderRadius: '16px' }}>
+                <n-text class="text-16" style={{ fontWeight: 700 }}>
+                    快捷操作
+                </n-text>
+                <div class="manager-quick-actions flex flex-col gap-20 m-bs-20">
                     {actions.map((action, index) => (
                         <n-card
                             key={index}
@@ -76,10 +78,7 @@ export default defineComponent({
                             onClick={() => handleClick(action)}
                         >
                             <div class="flex items-center gap-12">
-                                <div
-                                    class="action-icon-wrap"
-                                    style={{ background: action.bgColor }}
-                                >
+                                <div class="action-icon-wrap" style={{ background: action.bgColor }}>
                                     <span style={{ fontSize: '20px' }}>{action.icon}</span>
                                 </div>
                                 <div class="flex flex-col flex-1">
@@ -90,13 +89,21 @@ export default defineComponent({
                                         {action.desc}
                                     </n-text>
                                 </div>
-                                <n-text depth={3} style={{ fontSize: '16px' }}>→</n-text>
+                                <n-text depth={3} style={{ fontSize: '16px' }}>
+                                    →
+                                </n-text>
                             </div>
-                            <div style={{
-                                position: 'absolute', left: 0, top: 0, bottom: 0,
-                                width: '3px', borderRadius: '0 3px 3px 0',
-                                background: action.gradient
-                            }}></div>
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: '3px',
+                                    borderRadius: '0 3px 3px 0',
+                                    background: action.gradient
+                                }}
+                            ></div>
                         </n-card>
                     ))}
                 </div>

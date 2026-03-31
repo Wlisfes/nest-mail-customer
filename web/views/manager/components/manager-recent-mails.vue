@@ -50,8 +50,8 @@ export default defineComponent({
         })
 
         return () => (
-            <n-card hoverable content-class="p-20!" class="animate-fadeInUp animate-stagger-4" style={{ borderRadius: '16px' }}>
-                <div class="flex items-center justify-between m-be-8">
+            <n-card hoverable content-class="p-24!" class="animate-fadeInUp animate-stagger-4" style={{ borderRadius: '16px' }}>
+                <div class="flex items-center justify-between m-be-16">
                     <n-text class="text-16" style={{ fontWeight: 700 }}>
                         最近邮件
                     </n-text>
@@ -59,7 +59,7 @@ export default defineComponent({
                         查看全部 →
                     </n-button>
                 </div>
-                <div class="flex flex-col">
+                <div class="flex flex-col gap-18">
                     {state.mails.length === 0 && (
                         <div class="flex flex-col items-center gap-8 p-32">
                             <span style={{ fontSize: '40px', opacity: 0.5 }}>📭</span>

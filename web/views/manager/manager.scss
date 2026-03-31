@@ -83,7 +83,7 @@
 .manager-stat-cards {
     display: grid;
     grid-template-columns: repeat(4, minmax(0px, 1fr));
-    gap: 16px;
+    gap: 20px;
     @media (max-width: 1280px) {
         grid-template-columns: repeat(2, minmax(0px, 1fr));
     }
@@ -148,7 +148,7 @@
 .manager-charts {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 16px;
+    gap: 20px;
     @media (max-width: 1280px) {
         grid-template-columns: 1fr;
     }
@@ -166,7 +166,7 @@
 .manager-bottom-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 20px;
     @media (max-width: 1280px) {
         grid-template-columns: 1fr;
     }
@@ -176,7 +176,7 @@
 .manager-quick-actions {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 20px;
 }
 
 .manager-action-card {

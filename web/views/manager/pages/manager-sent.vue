@@ -188,7 +188,7 @@ export default defineComponent({
                     loading={state.loading}
                     style={{ flex: 1, cursor: 'pointer' }}
                     row-props={(row: any) => ({
-                        onClick: () => router.push(`/manager/mail/${row.keyId}`)
+                        onClick: () => router.push({ path: `/manager/mail/${row.keyId}`, query: { tabTitle: row.subject || '' } })
                     })}
                 />
                 <div class="flex justify-end">

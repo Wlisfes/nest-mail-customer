@@ -32,7 +32,7 @@ export default defineComponent({
 
         function handleRowClick(row: any) {
             if (row && row.keyId) {
-                router.push({ path: `/manager/mail/${row.keyId}` })
+                router.push({ path: `/manager/mail/${row.keyId}`, query: { tabTitle: row.subject || '' } })
             }
         }
 

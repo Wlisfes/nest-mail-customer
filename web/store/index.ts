@@ -1,5 +1,6 @@
 export * from '@/store/modules/mouse'
 export * from '@/store/modules/global'
+export * from '@/store/modules/tabs'
 import { defineStore, storeToRefs } from 'pinia'
 
 /**导出解构函数**/

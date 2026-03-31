@@ -5,6 +5,7 @@ import { httpFetchMailDetail, httpDeleteMail } from '@/api'
 import { $message, $dialog } from '@/utils'
 import dayjs from 'dayjs'
 import { useState } from '@/hooks'
+import { useTabs } from '@/store'
 import { NButton, NTag, NSkeleton, NEmpty } from 'naive-ui'
 import MailAvatar from '../components/mail-avatar.vue'
 
@@ -17,6 +18,7 @@ export default defineComponent({
             loading: true,
             mail: null as any
         })
+        const tabsStore = useTabs()
 
         const mailId = route.params.id as string
 
@@ -33,6 +35,9 @@ export default defineComponent({
                     }))
                 }
                 await setState({ mail })
+                // 更新标签页标题为邮件主题
+                const subject = mail.subject || '(无主题)'
+                tabsStore.updateTabTitle(route.fullPath, subject)
             } catch (err) {
                 $message.error('获取邮件详情失败')
                 console.error(err)
@@ -98,22 +103,26 @@ export default defineComponent({
         }
 
         function handleReply() {
+            const subject = state.mail?.subject || '(无主题)'
             router.push({
                 path: '/manager/compose',
                 query: {
                     replyTo: state.mail?.keyId,
                     to: state.mail?.fromAddress,
-                    subject: `Re: ${state.mail?.subject || ''}`
+                    subject: `Re: ${state.mail?.subject || ''}`,
+                    tabTitle: `${subject}-回复`
                 }
             })
         }
 
         function handleForward() {
+            const subject = state.mail?.subject || '(无主题)'
             router.push({
                 path: '/manager/compose',
                 query: {
                     forward: state.mail?.keyId,
-                    subject: `Fwd: ${state.mail?.subject || ''}`
+                    subject: `Fwd: ${state.mail?.subject || ''}`,
+                    tabTitle: `${subject}-转发`
                 }
             })
         }
@@ -125,8 +134,9 @@ export default defineComponent({
                 {/* Header */}
                 <div class="page-header">
                     <div class="flex items-center gap-12">
-                        <n-button quaternary circle onClick={() => router.back()}>
-                            <i class="i-carbon-arrow-left text-20"></i>
+                        <n-button secondary size="small" onClick={() => router.back()}>
+                            <i class="i-carbon-arrow-left mr-4"></i>
+                            返回
                         </n-button>
                         <n-text class="text-20" style={{ fontWeight: 700 }}>
                             邮件详情

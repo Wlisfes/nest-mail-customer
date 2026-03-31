@@ -16,47 +16,56 @@ export function createRouter(options: Omix<{ ssr: boolean }>) {
                 children: [
                     {
                         path: '/manager/dashboard',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerDashboard',
+                        meta: { AUTH: 'AUTH', title: '仪表盘', affix: true },
                         component: () => import('@/views/manager/pages/manager-dashboard.vue')
                     },
                     {
                         path: '/manager/inbox',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerInbox',
+                        meta: { AUTH: 'AUTH', title: '收件箱' },
                         component: () => import('@/views/manager/pages/manager-inbox.vue')
                     },
                     {
                         path: '/manager/sent',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerSent',
+                        meta: { AUTH: 'AUTH', title: '已发送' },
                         component: () => import('@/views/manager/pages/manager-sent.vue')
                     },
                     {
                         path: '/manager/drafts',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerDrafts',
+                        meta: { AUTH: 'AUTH', title: '草稿箱' },
                         component: () => import('@/views/manager/pages/manager-drafts.vue')
                     },
                     {
                         path: '/manager/compose',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerCompose',
+                        meta: { AUTH: 'AUTH', title: '写邮件' },
                         component: () => import('@/views/manager/pages/manager-compose.vue')
                     },
                     {
                         path: '/manager/accounts',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerAccounts',
+                        meta: { AUTH: 'AUTH', title: '邮箱账号' },
                         component: () => import('@/views/manager/pages/manager-accounts.vue')
                     },
                     {
                         path: '/manager/blacklist',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerBlacklist',
+                        meta: { AUTH: 'AUTH', title: '黑名单' },
                         component: () => import('@/views/manager/pages/manager-blacklist.vue')
                     },
                     {
                         path: '/manager/settings',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerSettings',
+                        meta: { AUTH: 'AUTH', title: '平台配置' },
                         component: () => import('@/views/manager/pages/manager-settings.vue')
                     },
                     {
                         path: '/manager/mail/:id',
-                        meta: { AUTH: 'AUTH' },
+                        name: 'ManagerMailDetail',
+                        meta: { AUTH: 'AUTH', title: '邮件详情' },
                         component: () => import('@/views/manager/pages/manager-mail-detail.vue')
                     },
                     {

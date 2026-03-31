@@ -1,13 +1,13 @@
 <script lang="tsx">
 import { defineComponent, h, onMounted, ref, watch } from 'vue'
-import { httpFetchMailList, httpSyncAllMailAccounts, httpResendMail } from '@/api'
+import { httpFetchMailList, httpSyncAllMailAccounts, httpResendMail, httpFetchMailAccounts } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
-import { NTag, type DataTableColumns } from 'naive-ui'
+import { NTag, NSelect, type DataTableColumns } from 'naive-ui'
 import { renderMailAvatar } from '../components/mail-avatar.vue'
 
 dayjs.extend(relativeTime)
@@ -22,14 +22,33 @@ export default defineComponent({
             page: 1,
             size: 20,
             total: 0,
-            list: [] as any[]
+            list: [] as any[],
+            accountId: null as number | null,
+            accounts: [] as Array<{ label: string; value: number }>
         })
         const syncing = ref(false)
+
+        async function fetchAccounts() {
+            try {
+                const res: any = await httpFetchMailAccounts()
+                const data = res.data ?? res
+                const list = Array.isArray(data) ? data : (data.list ?? [])
+                await setState({
+                    accounts: list.map((item: any) => ({ label: item.email, value: item.keyId }))
+                })
+            } catch (err) {
+                console.error('获取邮箱账号失败', err)
+            }
+        }
 
         async function fetchList() {
             await setState({ loading: true })
             try {
-                const res: any = await httpFetchMailList({ folder: 'Sent', page: state.page, size: state.size })
+                const params: any = { folder: 'Sent', page: state.page, size: state.size }
+                if (state.accountId) {
+                    params.accountId = state.accountId
+                }
+                const res: any = await httpFetchMailList(params)
                 const data = res.data ?? res
                 await setState({ list: data.list ?? [], total: data.total ?? 0 })
             } catch (err) {
@@ -52,7 +71,10 @@ export default defineComponent({
             }
         }
 
-        onMounted(() => fetchList())
+        onMounted(() => {
+            fetchAccounts()
+            fetchList()
+        })
         watch(
             () => state.page,
             () => fetchList()
@@ -137,7 +159,17 @@ export default defineComponent({
                             </n-tag>
                         )}
                     </div>
-                    <div class="flex gap-8">
+                    <div class="flex gap-8 items-center">
+                        <n-select
+                            v-model:value={state.accountId}
+                            options={state.accounts}
+                            placeholder="全部邮箱"
+                            clearable
+                            style={{ width: '200px' }}
+                            onUpdate:value={(val: number | null) => {
+                                setState({ accountId: val, page: 1 }).then(() => fetchList())
+                            }}
+                        />
                         <n-button size="small" type="primary" secondary round loading={syncing.value} onClick={handleSync}>
                             {syncing.value ? '同步中...' : '🔄 同步'}
                         </n-button>

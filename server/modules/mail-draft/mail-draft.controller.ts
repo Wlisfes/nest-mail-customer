@@ -21,8 +21,8 @@ export class MailDraftController {
         operation: { summary: '获取草稿列表' },
         response: { status: 200, description: 'OK' }
     })
-    public async httpFetchDrafts(@Request() request: dto.OmixRequest) {
-        return await this.mailDraftService.httpFetchDrafts(request)
+    public async httpFetchDrafts(@Request() request: dto.OmixRequest, @Body() body: { accountId?: number }) {
+        return await this.mailDraftService.httpFetchDrafts(request, body)
     }
 
     @ApiServiceDecorator(Post('/detail'), {

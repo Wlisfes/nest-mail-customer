@@ -48,10 +48,13 @@ export class MailDraftService extends Logger {
 
     /**获取草稿列表**/
     @AutoDescriptor
-    public async httpFetchDrafts(request: dto.OmixRequest) {
+    public async httpFetchDrafts(request: dto.OmixRequest, body?: { accountId?: number }) {
         try {
             return await this.database.builder(this.database.schemaMailDraft, async qb => {
                 qb.where(`t.userId = :userId`, { userId: request.user.keyId })
+                if (body?.accountId) {
+                    qb.andWhere(`t.accountId = :accountId`, { accountId: body.accountId })
+                }
                 qb.orderBy('t.createTime', 'DESC')
                 const list = await qb.getMany()
                 return { list }

@@ -1,6 +1,6 @@
 <script lang="tsx">
 import { defineComponent, h, onMounted } from 'vue'
-import { httpFetchDrafts, httpDeleteDraft } from '@/api'
+import { httpFetchDrafts, httpDeleteDraft, httpFetchMailAccounts } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import { useRouter } from 'vue-router'
@@ -19,13 +19,32 @@ export default defineComponent({
         const router = useRouter()
         const { state, setState } = useState({
             loading: false,
-            list: [] as any[]
+            list: [] as any[],
+            accountId: null as number | null,
+            accounts: [] as Array<{ label: string; value: number }>
         })
+
+        async function fetchAccounts() {
+            try {
+                const res: any = await httpFetchMailAccounts()
+                const data = res.data ?? res
+                const list = Array.isArray(data) ? data : (data.list ?? [])
+                await setState({
+                    accounts: list.map((item: any) => ({ label: item.email, value: item.keyId }))
+                })
+            } catch (err) {
+                console.error('获取邮箱账号失败', err)
+            }
+        }
 
         async function fetchList() {
             await setState({ loading: true })
             try {
-                const res: any = await httpFetchDrafts()
+                const params: any = {}
+                if (state.accountId) {
+                    params.accountId = state.accountId
+                }
+                const res: any = await httpFetchDrafts(params)
                 const data = res.data ?? res
                 await setState({ list: Array.isArray(data) ? data : (data.list ?? []) })
             } catch (err) {
@@ -45,7 +64,10 @@ export default defineComponent({
             }
         }
 
-        onMounted(fetchList)
+        onMounted(() => {
+            fetchAccounts()
+            fetchList()
+        })
 
         const columns: DataTableColumns = [
             {
@@ -116,9 +138,21 @@ export default defineComponent({
                             {state.list.length} 封
                         </n-tag>
                     </div>
-                    <n-button type="primary" round onClick={() => router.push('/manager/compose')} style={{ fontWeight: 600 }}>
-                        ✏️ 写邮件
-                    </n-button>
+                    <div class="flex items-center gap-8">
+                        <n-select
+                            v-model:value={state.accountId}
+                            options={state.accounts}
+                            placeholder="全部邮箱"
+                            clearable
+                            style={{ width: '200px' }}
+                            onUpdate:value={(val: number | null) => {
+                                setState({ accountId: val }).then(() => fetchList())
+                            }}
+                        />
+                        <n-button type="primary" round onClick={() => router.push('/manager/compose')} style={{ fontWeight: 600 }}>
+                            ✏️ 写邮件
+                        </n-button>
+                    </div>
                 </div>
                 {state.list.length === 0 && !state.loading ? (
                     <div class="flex flex-col items-center justify-center flex-1 gap-12">

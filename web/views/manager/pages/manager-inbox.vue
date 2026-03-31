@@ -1,13 +1,13 @@
 <script lang="tsx">
 import { defineComponent, h, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { httpFetchMailList, httpMarkMailSeen, httpSyncAllMailAccounts } from '@/api'
+import { httpFetchMailList, httpMarkMailSeen, httpSyncAllMailAccounts, httpFetchMailAccounts } from '@/api'
 import { $message } from '@/utils'
 import { useState } from '@/hooks'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
-import { NButton, NTag, NInput, type DataTableColumns } from 'naive-ui'
+import { NButton, NTag, NInput, NSelect, type DataTableColumns } from 'naive-ui'
 import { renderMailAvatar } from '../components/mail-avatar.vue'
 
 dayjs.extend(relativeTime)
@@ -23,7 +23,9 @@ export default defineComponent({
             size: 20,
             total: 0,
             list: [] as any[],
-            keyword: ''
+            keyword: '',
+            accountId: null as number | null,
+            accounts: [] as Array<{ label: string; value: number }>
         })
         const syncing = ref(false)
         const searchTimer = ref<NodeJS.Timeout | null>(null)
@@ -34,12 +36,28 @@ export default defineComponent({
             }
         }
 
+        async function fetchAccounts() {
+            try {
+                const res: any = await httpFetchMailAccounts()
+                const data = res.data ?? res
+                const list = Array.isArray(data) ? data : (data.list ?? [])
+                await setState({
+                    accounts: list.map((item: any) => ({ label: item.email, value: item.keyId }))
+                })
+            } catch (err) {
+                console.error('获取邮箱账号失败', err)
+            }
+        }
+
         async function fetchList() {
             await setState({ loading: true })
             try {
                 const params: any = { folder: 'INBOX', page: state.page, size: state.size }
                 if (state.keyword.trim()) {
                     params.keyword = state.keyword.trim()
+                }
+                if (state.accountId) {
+                    params.accountId = state.accountId
                 }
                 const res: any = await httpFetchMailList(params)
                 const data = res.data ?? res
@@ -85,7 +103,10 @@ export default defineComponent({
             }
         }
 
-        onMounted(() => fetchList())
+        onMounted(() => {
+            fetchAccounts()
+            fetchList()
+        })
         watch(
             () => state.page,
             () => fetchList()
@@ -149,6 +170,16 @@ export default defineComponent({
                         )}
                     </div>
                     <div class="flex gap-8 items-center">
+                        <n-select
+                            v-model:value={state.accountId}
+                            options={state.accounts}
+                            placeholder="全部邮箱"
+                            clearable
+                            style={{ width: '200px' }}
+                            onUpdate:value={(val: number | null) => {
+                                setState({ accountId: val, page: 1 }).then(() => fetchList())
+                            }}
+                        />
                         <n-input
                             placeholder="搜索邮件..."
                             clearable

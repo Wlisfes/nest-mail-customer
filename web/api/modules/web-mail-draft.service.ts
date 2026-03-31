@@ -10,10 +10,11 @@ export function httpSaveDraft(body: Omix) {
 }
 
 /**获取草稿列表**/
-export function httpFetchDrafts() {
+export function httpFetchDrafts(body?: Omix) {
     return request({
         url: `/api/mail-draft/list`,
-        method: 'POST'
+        method: 'POST',
+        data: body
     })
 }
 
